@@ -76,6 +76,17 @@ namespace KL.HttpScheduler.Api.Tests
             var client = new HttpClient();
             client.BaseAddress = new Uri("http://localhost:5000/");
 
+            using (var cancelSource = new CancellationTokenSource(3000))
+            {
+                try
+                {
+                    await client.GetAsync("", cancelSource.Token);
+                }
+                catch
+                {
+                    return;
+                }
+            }
             var req = new HttpRequestMessage(HttpMethod.Post, "api/jobs");
             var job = new HttpJob()
             {
