@@ -15,8 +15,8 @@ variables:
 steps:
   - task: Docker@1
     inputs:
-      dockerFile: KL.HttpScheduler.Api/Dockerfile
-      workingDirectory: '.'
+      dockerFile: ./KL.HttpScheduler.Api/Dockerfile
+      buildContext: './'
       containerregistrytype: Azure Container Registry
       imageName: $(IMAGENAME)
       imageNamesPath: ''
