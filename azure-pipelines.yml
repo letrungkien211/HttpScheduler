@@ -15,5 +15,7 @@ variables:
 steps:
 - script: dotnet build --configuration $(buildConfiguration)
   displayName: 'dotnet build $(buildConfiguration)'
+- script: docker run redis -p 6379:6379
+  displayName: 'run docker locally'
 - script: dotnet test
   displayName: 'dotnet test $(buildConfiguration)'
