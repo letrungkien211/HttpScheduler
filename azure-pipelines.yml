@@ -17,4 +17,4 @@ steps:
     inputs:
       targetType: 'inline'
       filePath: ''
-      script: 'Write-Host $arcName'
+      script: 'Write-Host $env:arcName'
