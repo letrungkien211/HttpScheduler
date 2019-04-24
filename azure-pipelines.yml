@@ -13,7 +13,9 @@ variables:
   buildConfiguration: 'Release'
 
 steps:
-- script: docker build -f KL.HttpScheduler.Runner/Dockerfile -t $(acr)/httpschedulerrunner:$(tag) .
+- script: $acr =$acrName + "azurecr.io"
+- script: $fulltag = $acr +"/httpschedulerrunner:" + $(Get-Date -format "yyyy-MM-dd-HH-mm")
+- script: docker build -f KL.HttpScheduler.Runner/Dockerfile -t $fulltag .
   displayName: 'build'
 - script: az acr login --name $acrName
   displayName: 'acr login'
