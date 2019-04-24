@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
-namespace KL.HttpScheduler
+namespace KL.HttpScheduler.Runner
 {
     public class Program
     {
@@ -18,7 +18,7 @@ namespace KL.HttpScheduler
         }
 
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
-            WebHost.CreateDefaultBuilder(args)
+            WebHost.CreateDefaultBuilder(args).UseUrls("http://*:6000")
                 .UseStartup<Startup>();
     }
 }

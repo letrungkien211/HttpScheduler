@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 
-namespace KL.HttpScheduler.Controllers
+namespace KL.HttpScheduler.Runner.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
