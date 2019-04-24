@@ -13,8 +13,11 @@ variables:
   buildConfiguration: 'Release'
 
 steps:
-  - task: PowerShell@2
+  - task: Docker@1
     inputs:
-      filePath: 'build.ps1'
-      script: ''
-      arguments: "-acrName $env:ACRNAME"
+      dockerFile: KL.HttpScheduler.Api/Dockerfile
+      containerregistrytype: Azure Container Registry
+      imageName: $(imageName)
+      imageNamesPath: ''
+      command: Build an image
+      restartPolicy: no
