@@ -1,5 +1,11 @@
-﻿$acrName = $env:acrName
-$acr =$acrName + "azurecr.io"
+﻿param(
+ [Parameter(Mandatory=$True)]
+ [string]
+ $acrName
+)
+
+
+$acr =$acrName + ".azurecr.io"
 $fulltag = $acr +"/httpschedulerrunner:" + $(Get-Date -format "yyyy-MM-dd-HH-mm")
 
 
