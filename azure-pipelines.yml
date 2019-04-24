@@ -13,13 +13,7 @@ variables:
   buildConfiguration: 'Release'
 
 steps:
-  - task: Docker@1
-    inputs:
-      dockerFile: ./KL.HttpScheduler.Api/Dockerfile
-      buildContext: './'
-      containerregistrytype: Azure Container Registry
-      imageName: $(IMAGENAME)
-      imageNamesPath: ''
-      command: Build an image
-      restartPolicy: no
+  - bash: docker build -f ./KL.HttpScheduler.Api/Dockerfile -t $(ACRNAME).azurecr.io/$(IMAGENAME) .
+  - bash: docker login --username $(ACRNAME) --password $(ACRPASS) $(ACRNAME).azurecr.io
+  
 
