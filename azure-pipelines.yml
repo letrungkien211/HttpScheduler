@@ -17,7 +17,7 @@ steps:
     inputs:
       dockerFile: KL.HttpScheduler.Api/Dockerfile
       containerregistrytype: Azure Container Registry
-      imageName: $(imageName)
+      imageName: $(IMAGENAME)
       imageNamesPath: ''
       command: Build an image
       restartPolicy: no
