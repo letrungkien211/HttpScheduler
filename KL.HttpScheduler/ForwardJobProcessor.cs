@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace KL.HttpScheduler
 {
     /// <summary>
-    /// Job processor
+    /// Forward this job to another server
     /// </summary>
     public class ForwardJobProcessor : IJobProcessor
     {
@@ -34,7 +34,6 @@ namespace KL.HttpScheduler
                 Content = new StringContent(JsonConvert.SerializeObject(httpJob), Encoding.UTF8, "application/json")
             };
 
-            Console.WriteLine("OK");
             return client.SendAsync(req, cancellationToken);
         }
     }
