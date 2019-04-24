@@ -18,7 +18,7 @@
         "ASPNETCORE_HOSTINGSTARTUP__KEYVAULT__CONFIGURATIONENABLED": "true"
       }
     },
-    "KL.HttpScheduler": {
+    "KL.HttpScheduler.Api": {
       "commandName": "Project",
       "launchBrowser": true,
       "launchUrl": "api/values",

@@ -1,4 +1,5 @@
 ﻿using KL.HttpScheduler.Api.Common;
+using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -73,6 +74,10 @@ namespace KL.HttpScheduler.Api
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, IApplicationLifetime applicationLifetime)
         {
+            var configuration = app.ApplicationServices.GetService<TelemetryConfiguration>();
+            configuration.InstrumentationKey = Configuration["HttpScheduler:ApplicationInsights:InstrumentationKey"] ?? "";
+            configuration.TelemetryProcessorChainBuilder.Build();
+
             app.ApplicationServices.GetService<SortedSetScheduleClient>();
 
             if (env.IsDevelopment())

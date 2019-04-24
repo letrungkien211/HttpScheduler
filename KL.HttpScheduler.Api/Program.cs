@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore;
+﻿using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 
 namespace KL.HttpScheduler.Api
 {
@@ -19,6 +13,19 @@ namespace KL.HttpScheduler.Api
 
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
+                .ConfigureAppConfiguration((ctx, builder) =>
+                {
+                    var config = builder.Build();
+                    var endpoint = config["KeyVaultEndpoint"];
+                    if (!string.IsNullOrEmpty(endpoint))
+                    {
+                        builder.AddAzureKeyVault(
+                            config["KeyVaultEndpoint"],
+                            config["KeyVaultClient"],
+                            config["KeyVaultSecret"]
+                            );
+                    }
+                })
                 .UseApplicationInsights()
                 .UseStartup<Startup>();
     }

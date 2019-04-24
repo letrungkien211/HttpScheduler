@@ -9,7 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KL.HttpScheduler.Tests", "K
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KL.HttpScheduler", "KL.HttpScheduler\KL.HttpScheduler.csproj", "{D15B6D21-E152-4645-8096-EDAD14F4C859}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KL.HttpScheduler.Runner", "KL.HttpScheduler.Runner\KL.HttpScheduler.Runner.csproj", "{0BD8B36C-9762-4C31-A026-43A71C5C7E10}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KL.HttpScheduler.Runner", "KL.HttpScheduler.Runner\KL.HttpScheduler.Runner.csproj", "{0BD8B36C-9762-4C31-A026-43A71C5C7E10}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
