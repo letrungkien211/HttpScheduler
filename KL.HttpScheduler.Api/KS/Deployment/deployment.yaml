@@ -34,7 +34,6 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  namespace: '#{NAMESPACE}#'
   name: '#{API_IMAGENAME}#'
 spec:
   selector:
