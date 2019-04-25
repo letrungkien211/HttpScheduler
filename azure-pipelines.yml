@@ -20,3 +20,13 @@ steps:
   - bash: redisid=`docker run -p 6379:6379 -d redis`
   - bash: dotnet test 
   - bash: docker stop $(docker ps -aq)
+  - task: replacetokens@3
+    inputs:
+      rootDirectory: '.'
+      targetFiles: 'deployment.yaml'
+      verbosity: 'detailed'
+      keepToken: true
+  - task: artifactDropTask@0
+    inputs:
+      sourcePath: './KL.HttpScheduler.Api/Deployment/'
+    
