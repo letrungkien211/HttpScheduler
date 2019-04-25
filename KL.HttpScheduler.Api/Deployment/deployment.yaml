@@ -2,20 +2,20 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   namespace: #{NAMESPACE}#
-  name: #{API.IMAGENAME}#
+  name: #{API_IMAGENAME}#
 spec:
   replicas: #{Replicas}#
   selector:
     matchLabels:
-      app: #{API.IMAGENAME}#
+      app: #{API_IMAGENAME}#
   template:
     metadata:
       labels:
-        app: #{API.IMAGENAME}#
+        app: #{API_IMAGENAME}#
     spec:
       containers:
-      - name: #{API.IMAGENAME}#
-        image: #{ACRNAME}#.azurecr.io/#{API.IMAGENAME}#:#{Build.SourceBranchName}#-#{Build.BuildId}#
+      - name: #{API_IMAGENAME}#
+        image: #{ACRNAME}#.azurecr.io/#{API_IMAGENAME}#:#{Build.SourceBranchName}#-#{Build.BuildId}#
         env:
           - name: ASPNETCORE_ENVIRONMENT
             value: '#{ASPNETCORE_ENVIRONMENT}#'
@@ -33,11 +33,11 @@ apiVersion: apps/v1
 kind: Service
 metadata:
   namespace: #{NAMESPACE}#
-  name: #{API.IMAGENAME}#
+  name: #{API_IMAGENAME}#
 spec:
   type: LoadBalancer
   ports:
   - port: 8081
     targetPort: 80
   selector:
-    app: #{API.IMAGENAME}#
+    app: #{API_IMAGENAME}#

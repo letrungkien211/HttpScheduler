@@ -12,7 +12,7 @@ pool:
 
 variables:
   buildConfiguration: 'Release'
-  tag: $(ACRNAME).azurecr.io/$(API.IMAGENAME):$(Build.SourceBranchName)-$(Build.BuildId)
+  tag: $(ACRNAME).azurecr.io/$(API_IMAGENAME):$(Build.SourceBranchName)-$(Build.BuildId)
   deploymentDirectory: './KL.HttpScheduler.Api/Deployment/'
 
 steps:
