@@ -19,6 +19,10 @@ spec:
         env:
           - name: ASPNETCORE_ENVIRONMENT
             value: '#{ASPNETCORE_ENVIRONMENT}#'
+		  - name: ApplicationInsights:InstrumentationKey
+			value: '#{InstrumentationKey}#'
+		  - name: Config.RedisConnectionString
+		    value: '#{RedisConnectionString}#'
         ports:
         - containerPort: 80
       imagePullSecrets:
