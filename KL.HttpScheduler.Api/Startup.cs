@@ -64,15 +64,16 @@ namespace KL.HttpScheduler.Api
             app.ApplicationServices.GetService<SortedSetScheduleClient>();
             var schedulerRunner = app.ApplicationServices.GetService<SchedulerRunner>();
             var manualEvent = new ManualResetEventSlim();
-            var cancelSource = new CancellationTokenSource();
 
-            app.ApplicationServices.GetService<MyActionBlock>().EnableForward = Config.EnableForward;
+            var actionBlock = app.ApplicationServices.GetService<MyActionBlock>();
+            actionBlock.EnableForward = Config.EnableForward;
 
             applicationLifetime.ApplicationStarted.Register(() =>
             {
                 Task.Run(async () =>
                 {
-                    await schedulerRunner.RunAsync(cancelSource.Token).ConfigureAwait(false);
+                    await schedulerRunner.RunAsync(applicationLifetime.ApplicationStopped).ConfigureAwait(false);
+                    await actionBlock.CompleteAsync().ConfigureAwait(false);
                     manualEvent.Set();
                     Console.WriteLine("Background stopped");
                 });
@@ -80,7 +81,6 @@ namespace KL.HttpScheduler.Api
 
             applicationLifetime.ApplicationStopped.Register(() =>
             {
-                cancelSource.Cancel();
                 if (manualEvent.Wait(TimeSpan.FromSeconds(2)))
                 {
                     Console.WriteLine("Gracefully shutdown");
@@ -89,7 +89,6 @@ namespace KL.HttpScheduler.Api
                 {
                     Console.Error.WriteLine("Shutdown incorrectly");
                 }
-                cancelSource.Dispose();
             });
 
             if (env.IsDevelopment())

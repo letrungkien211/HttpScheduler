@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks.Dataflow;
+﻿using System.Threading;
+using System.Threading.Tasks;
+using System.Threading.Tasks.Dataflow;
 
 namespace KL.HttpScheduler
 {
@@ -27,6 +29,12 @@ namespace KL.HttpScheduler
                 }
             });
 
+        }
+
+        public Task CompleteAsync()
+        {
+            ActionBlock.Complete();
+            return ActionBlock.Completion;
         }
 
         public bool Post(HttpJob httpJob, bool forward)
