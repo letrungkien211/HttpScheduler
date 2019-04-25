@@ -27,3 +27,17 @@ spec:
         - containerPort: 80
       imagePullSecrets:
         - name: #{ACRNAME}#
+
+---
+apiVersion: apps/v1
+kind: Service
+metadata:
+  namespace: #{NAMESPACE}#
+  name: #{API.IMAGENAME}#
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 8081
+    targetPort: 80
+  selector:
+    app: #{API.IMAGENAME}#
