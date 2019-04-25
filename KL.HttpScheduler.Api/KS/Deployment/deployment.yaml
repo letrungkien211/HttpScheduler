@@ -1,3 +1,4 @@
+# Define the deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -28,6 +29,7 @@ spec:
       imagePullSecrets:
         - name: '#{ACRNAME}#'
 
+# Define the service to forward to above deployment
 ---
 apiVersion: v1
 kind: Service
@@ -43,6 +45,7 @@ spec:
     port: 8081
     targetPort: 80
 
+# Ingress can only see service in default namespace. Specify the external name for this service to be accessed by ingress.
 ---
 apiVersion: v1
 kind: Service
