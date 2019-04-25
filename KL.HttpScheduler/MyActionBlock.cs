@@ -12,6 +12,11 @@ namespace KL.HttpScheduler
         private ActionBlock<ActionBlockInput> ActionBlock { get; }
         public bool EnableForward { get; set; }
 
+        /// <summary>
+        /// Action Block
+        /// </summary>
+        /// <param name="forwardJobProcessor"></param>
+        /// <param name="jobProcessorWrapper"></param>
         public MyActionBlock(
             ForwardJob forwardJobProcessor, 
             JobProcessorWrapper jobProcessorWrapper

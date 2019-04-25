@@ -42,7 +42,7 @@ namespace KL.HttpScheduler.Api.Controllers
         [HttpPost("[action]")]
         public IActionResult Execute([FromBody]HttpJob httpJob, [FromServices]MyActionBlock actionBlock)
         {
-            actionBlock.Post(httpJob, true);
+            actionBlock.Post(httpJob, false);
             return Ok();
         }
 

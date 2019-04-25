@@ -69,12 +69,13 @@ namespace KL.HttpScheduler.Api.Tests
             }
         }
 
-        [Fact]
-        public async Task TestScheduleLocalHost()
+        [Theory]
+        [InlineData("http://localhost:5000/")]
+        public async Task TestOnlinScheduleLocalHost(string baseAddress)
         {
             Startup.UnitTest = true;
             var client = new HttpClient();
-            client.BaseAddress = new Uri("http://localhost:5000/");
+            client.BaseAddress = new Uri(baseAddress);
 
             using (var cancelSource = new CancellationTokenSource(3000))
             {

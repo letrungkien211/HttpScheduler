@@ -1,5 +1,8 @@
 ﻿namespace KL.HttpScheduler
 {
+    /// <summary>
+    /// Configuration
+    /// </summary>
     public class Config
     {
         public string RedisConnectionString { get; set; } = "localhost:6379, ssl=False,abortConnect=False";
