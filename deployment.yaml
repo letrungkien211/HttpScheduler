@@ -1,21 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: httpscheduler
-  name: httpscheduler-api
+  namespace: #{NAMESPACE}#
+  name: #{IMAGENAME}#-api
 spec:
-  replicas: #{Replicas}
+  replicas: #{Replicas}#
   selector:
     matchLabels:
-      app: httpscheduler-api
+      app: #{IMAGENAME}#-api
   template:
     metadata:
       labels:
-        app: httpscheduler-api
+        app: #{IMAGENAME}#-api
     spec:
       containers:
-      - name: httpscheduler-api
-        image: #{ACRNAME}#.azurecr.io/httpscheduler-api:#{Build.SourceBranchName}#-#{Build.BuildId}#
+      - name: #{IMAGENAME}#-api
+        image: #{ACRNAME}#.azurecr.io/#{IMAGENAME}#:#{Build.SourceBranchName}#-#{Build.BuildId}#
         env:
           - name: ASPNETCORE_ENVIRONMENT
             value: '#{ASPNETCORE_ENVIRONMENT}#'
