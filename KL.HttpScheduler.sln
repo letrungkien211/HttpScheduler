@@ -11,11 +11,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KL.HttpScheduler", "KL.Http
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KL.HttpScheduler.Runner", "KL.HttpScheduler.Runner\KL.HttpScheduler.Runner.csproj", "{0BD8B36C-9762-4C31-A026-43A71C5C7E10}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{EB365693-0386-458A-8759-8118C52203AC}"
-	ProjectSection(SolutionItems) = preProject
-		azure-pipelines.yml = azure-pipelines.yml
-	EndProjectSection
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KL.HttpScheduler.Runner.Tests", "KL.HttpScheduler.Runner.Tests\KL.HttpScheduler.Runner.Tests.csproj", "{F28237CF-25D9-4D48-9DCC-266AC1FB6926}"
 EndProject
 Global

@@ -1,0 +1,42 @@
+# ASP.NET Core
+# Build and test ASP.NET Core projects targeting .NET Core.
+# Add steps that run tests, create a NuGet package, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
+
+trigger:
+- master
+- int
+
+pool:
+  vmImage: 'Ubuntu-16.04'
+
+variables:
+  buildConfiguration: 'Release'
+  tag: $(ACRNAME).azurecr.io/$(API_IMAGENAME):$(Build.SourceBranchName)-$(Build.BuildId)
+  deploymentDirectory: './KL.HttpScheduler.Api/KS/Deployment/'
+
+steps:
+  - bash: docker build -f ./KL.HttpScheduler.Api/Dockerfile -t $(tag) .
+    displayName: Build docker file
+  - bash: docker login --username $(ACRNAME) --password $(ACRPASS) $(ACRNAME).azurecr.io
+    displayName: Login to $(ACRNAME).azurecr.io
+  - bash: docker push $(tag)
+    displayName: Push $(tag) to $(ACRNAME).azurecr.io
+  - bash: redisid=`docker run -p 6379:6379 -d redis`
+    displayName: Run redis
+  - bash: dotnet test 
+    displayName: Run tests
+  - bash: docker stop $(docker ps -aq)
+    displayName: Stop all dockers (redis)
+  - task: replacetokens@3
+    displayName: Replace environment variables
+    inputs:
+      rootDirectory: $(deploymentDirectory)
+      targetFiles: 'deployment.yaml'
+      verbosity: 'detailed'
+      keepToken: true
+  - task: PublishBuildArtifacts@1
+    displayName: Publish artifact
+    inputs:
+      pathtoPublish: $(deploymentDirectory)
+    

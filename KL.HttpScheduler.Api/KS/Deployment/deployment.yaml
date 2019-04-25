@@ -19,10 +19,10 @@ spec:
         env:
           - name: ASPNETCORE_ENVIRONMENT
             value: '#{ASPNETCORE_ENVIRONMENT}#'
-      - name: ApplicationInsights:InstrumentationKey
-        value: '#{InstrumentationKey}#'
-      - name: Config.RedisConnectionString
-        value: '#{RedisConnectionString}#'
+          - name: ApplicationInsights__InstrumentationKey
+            value: '#{InstrumentationKey}#'
+          - name: Config__RedisConnectionString
+            value: '#{RedisConnectionString}#'
         ports:
         - containerPort: 80
       imagePullSecrets:
@@ -36,6 +36,6 @@ metadata:
   name: '#{API_IMAGENAME}#'
 spec:
   type: ExternalName
-  externalName: '#{API_IMAGENAME}#.#{NAMESPACE}#'
+  externalName: '#{API_IMAGENAME}#.#{NAMESPACE}#.svc.cluster.local'
   ports:
   - port: 8081
