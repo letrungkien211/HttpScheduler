@@ -40,9 +40,9 @@ namespace KL.HttpScheduler.Api.Controllers
         }
 
         [HttpPost("[action]")]
-        public IActionResult Execute([FromBody]HttpJob httpJob, [FromServices]ActionBlock<HttpJob> actionBlock)
+        public IActionResult Execute([FromBody]HttpJob httpJob, [FromServices]MyActionBlock actionBlock)
         {
-            actionBlock.Post(httpJob);
+            actionBlock.Post(httpJob, true);
             return Ok();
         }
 

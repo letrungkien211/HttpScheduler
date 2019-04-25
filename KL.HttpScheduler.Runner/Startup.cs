@@ -31,7 +31,7 @@ namespace KL.HttpScheduler.Runner
         {
             var config = Configuration.GetSection("Config").Get<Config>() ?? new Config();
 
-            services.AddHttpClient(ForwardJobProcessor.ForwardClientName, client =>
+            services.AddHttpClient(ForwardJob.ForwardClientName, client =>
             {
                 client.BaseAddress = new Uri("http://localhost:5000/api/jobs/execute");
             });
@@ -41,7 +41,7 @@ namespace KL.HttpScheduler.Runner
                 return (ConnectionMultiplexer.Connect(config.RedisConnectionString)).GetDatabase();
             });
 
-            services.AddSingleton<IJobProcessor, ForwardJobProcessor>();
+            services.AddSingleton<ForwardJob>();
 
             services.AddSingleton<JobProcessorWrapper>();
             services.AddSingleton<TelemetryClient>();
