@@ -11,10 +11,12 @@ pool:
 
 variables:
   buildConfiguration: 'Release'
+  tag: $(ACRNAME).azurecr.io/$(API.IMAGENAME):$(Build.SourceBranchName)-$(Build.BuildId)
 
 steps:
-  - task: PowerShell@2
-    inputs:
-      filePath: 'build.ps1'
-      script: ''
-      arguments: "-acrName $env:ACRNAME"
+  - bash: docker build -f ./KL.HttpScheduler.Api/Dockerfile -t $(tag) .
+  - bash: docker login --username $(ACRNAME) --password $(ACRPASS) $(ACRNAME).azurecr.io
+  - bash: docker push $(tag)
+  - bash: redisid=`docker run -p 6379:6379 -d redis`
+  - bash: dotnet test 
+  - bash: docker stop $(docker ps -aq)

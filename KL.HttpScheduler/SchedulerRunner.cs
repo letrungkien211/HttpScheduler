@@ -15,24 +15,29 @@ namespace KL.HttpScheduler
     {
         private SortedSetScheduleClient SortedSetDequeueClient { get; }
         private ActionBlock<HttpJob> ActionBlock { get; }
-        public SchedulerRunner(SortedSetScheduleClient sortedSetDequeueClient, IJobProcessor jobProcessor)
+        public SchedulerRunner(
+            SortedSetScheduleClient sortedSetDequeueClient, 
+            ActionBlock<HttpJob> actionBlock
+            )
         {
             SortedSetDequeueClient = sortedSetDequeueClient;
 
-            ActionBlock = new ActionBlock<HttpJob>(async (httpJob) =>
-            {
-                try
-                {
-                    using(var cancellationSource = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
-                    {
-                        await jobProcessor.ProcessAsync(httpJob, cancellationSource.Token).ConfigureAwait(false);
-                    }
-                }
-                catch(Exception)
-                {
-                    // Put logging here
-                }
-            });
+            ActionBlock = actionBlock;
+            
+            // new ActionBlock<HttpJob>(async (httpJob) =>
+            // {
+            //     try
+            //     {
+            //         using(var cancellationSource = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
+            //         {
+            //             await jobProcessor.ProcessAsync(httpJob, cancellationSource.Token).ConfigureAwait(false);
+            //         }
+            //     }
+            //     catch(Exception)
+            //     {
+            //         // Put logging here
+            //     }
+            // });
         }
         /// <summary>
         /// Run async
@@ -46,7 +51,9 @@ namespace KL.HttpScheduler
                 var httpJob = await SortedSetDequeueClient.DequeueAsync(cancellationToken).ConfigureAwait(false);
                 if (httpJob != null)
                 {
-                    ActionBlock.Post(httpJob);
+                    if(!ActionBlock.Post(httpJob)){
+                        // Put error log here.
+                    }
                 }
                 else
                 {

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Threading.Tasks.Dataflow;
+using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -41,6 +43,18 @@ namespace KL.HttpScheduler.Runner
 
             services.AddSingleton<IJobProcessor, ForwardJobProcessor>();
 
+            services.AddSingleton<JobProcessorWrapper>();
+            services.AddSingleton<TelemetryClient>();
+
+            services.AddSingleton<ActionBlock<HttpJob>>(provider =>
+            {
+                var jobProcessor = provider.GetService<JobProcessorWrapper>();
+
+                return new ActionBlock<HttpJob>((httpJob) =>
+                {
+                    return jobProcessor.ProcessAsync(httpJob);
+                });
+            });
             services.AddSingleton<SchedulerRunner>();
 
             services.AddSingleton<SortedSetScheduleClient>(provider =>
