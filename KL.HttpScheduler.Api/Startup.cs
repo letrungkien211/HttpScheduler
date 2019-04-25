@@ -1,4 +1,5 @@
 ﻿using KL.HttpScheduler.Api.Common;
+using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -41,24 +42,16 @@ namespace KL.HttpScheduler.Api
             });
 
             services.AddSingleton<IJobProcessor, JobProcessor>();
+            services.AddSingleton<JobProcessorWrapper>();
+            services.AddSingleton<TelemetryClient>();
 
             services.AddSingleton<ActionBlock<HttpJob>>(provider =>
             {
-                var jobProcessor = provider.GetService<IJobProcessor>();
+                var jobProcessor = provider.GetService<JobProcessorWrapper>();
 
-                return new ActionBlock<HttpJob>(async (httpJob) =>
+                return new ActionBlock<HttpJob>((httpJob) =>
                 {
-                    try
-                    {
-                        using (var cancellationSource = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
-                        {
-                            await jobProcessor.ProcessAsync(httpJob, cancellationSource.Token).ConfigureAwait(false);
-                        }
-                    }
-                    catch (Exception)
-                    {
-                        // Put logging here
-                    }
+                    return jobProcessor.ProcessAsync(httpJob);
                 });
             });
 
@@ -74,10 +67,6 @@ namespace KL.HttpScheduler.Api
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, IApplicationLifetime applicationLifetime)
         {
-            var configuration = app.ApplicationServices.GetService<TelemetryConfiguration>();
-            configuration.InstrumentationKey = Configuration["HttpScheduler:ApplicationInsights:InstrumentationKey"] ?? "";
-            configuration.TelemetryProcessorChainBuilder.Build();
-
             app.ApplicationServices.GetService<SortedSetScheduleClient>();
 
             if (env.IsDevelopment())

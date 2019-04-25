@@ -19,19 +19,4 @@ namespace KL.HttpScheduler
         /// <returns></returns>
         Task ProcessAsync(HttpJob httpJob, CancellationToken cancellationToken);
     }
-
-    public class MockJobProcessor : IJobProcessor
-    {
-        public IDictionary<string, HttpJob> Dict = new ConcurrentDictionary<string, HttpJob>();
-        public Task ProcessAsync(HttpJob httpJob, CancellationToken cancellationToken)
-        {
-            Dict[httpJob.Id] = httpJob;
-            return Task.FromResult(0);
-        }
-
-        public HttpJob Get(string id)
-        {
-            return Dict.TryGetValue(id, out var val) ? val : null;
-        }
-    }
 }
