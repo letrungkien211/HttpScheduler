@@ -9,5 +9,6 @@
         public string HashKey { get; set; } = "hash";
         public string SortedSetKey { get; set; } = "sortedset";
         public bool EnableForward { get; set; } = false;
+        public bool UnitTest { get; set; } = false;
     }
 }

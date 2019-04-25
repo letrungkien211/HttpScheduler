@@ -20,6 +20,7 @@ namespace KL.HttpScheduler.Api.Tests
 
         public TestJobsController(WebApplicationFactory<Startup> factory, ITestOutputHelper testOutputHelper)
         {
+            Environment.SetEnvironmentVariable("Config__UnitTest", "true");
             _factory = factory;
             _testOutputHelper = testOutputHelper;
         }
@@ -27,7 +28,6 @@ namespace KL.HttpScheduler.Api.Tests
         [Fact]
         public async Task TestSchedulerRunner()
         {
-            Startup.UnitTest = true;
             var client = _factory.CreateClient();
 
             using (var cancelSource = new CancellationTokenSource())
@@ -35,11 +35,10 @@ namespace KL.HttpScheduler.Api.Tests
             {
                 var runner = scope.ServiceProvider.GetRequiredService<SchedulerRunner>();
                 var task = Task.Run(() => runner.RunAsync(cancelSource.Token));
-                var req = new HttpRequestMessage(HttpMethod.Post, "api/jobs");
+                var req = new HttpRequestMessage(HttpMethod.Post, "api/jobs/batch");
                 var job = new HttpJob()
                 {
                     Id = Guid.NewGuid().ToString("N"),
-                    IsCancellable = true,
                     ScheduleDequeueTime = DateTimeOffset.UtcNow.AddSeconds(2).ToUnixTimeMilliseconds(),
                     Uri = new Uri("http://localhost/")
                 };
@@ -71,9 +70,8 @@ namespace KL.HttpScheduler.Api.Tests
 
         [Theory]
         [InlineData("http://localhost:5000/")]
-        public async Task TestOnlinScheduleLocalHost(string baseAddress)
+        public async Task TestOnlineScheduleLocalHost(string baseAddress)
         {
-            Startup.UnitTest = true;
             var client = new HttpClient();
             client.BaseAddress = new Uri(baseAddress);
 
@@ -92,7 +90,6 @@ namespace KL.HttpScheduler.Api.Tests
             var job = new HttpJob()
             {
                 Id = Guid.NewGuid().ToString("N"),
-                IsCancellable = true,
                 ScheduleDequeueTime = DateTimeOffset.UtcNow.AddSeconds(2).ToUnixTimeMilliseconds(),
                 Uri = new Uri("http://localhost/")
             };
@@ -105,20 +102,31 @@ namespace KL.HttpScheduler.Api.Tests
         [Fact]
         public async Task TestCancel()
         {
-            Startup.UnitTest = true;
             var client = _factory.CreateClient();
 
-            var req = new HttpRequestMessage(HttpMethod.Post, "api/jobs");
             var job = new HttpJob()
             {
                 Id = Guid.NewGuid().ToString("N"),
-                IsCancellable = true,
                 ScheduleDequeueTime = DateTimeOffset.UtcNow.AddSeconds(2).ToUnixTimeMilliseconds(),
                 Uri = new Uri("http://localhost/")
             };
-            req.Content = new StringContent(JsonConvert.SerializeObject(new { Jobs = new List<HttpJob>() { job } }), Encoding.UTF8, "application/json");
 
-            Assert.Equal(HttpStatusCode.OK, (await client.SendAsync(req)).StatusCode);
+            for (var i = 0; i < 2; i++)
+            {
+                var req = new HttpRequestMessage(HttpMethod.Post, "api/jobs");
+                req.Content = new StringContent(JsonConvert.SerializeObject(job), Encoding.UTF8, "application/json");
+                var res = await client.SendAsync(req);
+
+                if (i == 0)
+                {
+                    Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+                }
+                else
+                {
+                    Assert.Equal(HttpStatusCode.BadRequest, res.StatusCode);
+                }
+            }
+
 
             Assert.True((await client.SendAsync(new HttpRequestMessage(HttpMethod.Delete, $"api/jobs/{job.Id}"))).IsSuccessStatusCode);
 

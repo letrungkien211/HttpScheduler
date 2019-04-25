@@ -1,6 +1,8 @@
 ﻿using KL.HttpScheduler.Api.Common;
 using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
@@ -17,12 +19,28 @@ namespace KL.HttpScheduler.Api.Controllers
         {
             this.sortedSetScheduleClient = sortedSetScheduleClient;
         }
-        [HttpPost("")]
-        public Task Schedule(
+        [HttpPost("batch")]
+        public Task<IEnumerable<(bool, Exception)>> ScheduleBatch(
             [FromBody]ScheduleInput scheduleInput,
             CancellationToken cancellationToken)
         {
             return sortedSetScheduleClient.ScheduleAsync(scheduleInput.Jobs, cancellationToken);
+        }
+
+        [HttpPost("")]
+        public async Task<IActionResult> Schedule(
+            [FromBody]HttpJob httpJob,
+            CancellationToken cancellationToken)
+        {
+            var (success, ex) = (await sortedSetScheduleClient.ScheduleAsync(new[] { httpJob }, cancellationToken)).First();
+            if (success)
+            {
+                return Ok();
+            }
+            else
+            {
+                return BadRequest(ex);
+            }
         }
 
         [HttpDelete("{id}")]

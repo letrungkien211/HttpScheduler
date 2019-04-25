@@ -16,7 +16,6 @@ namespace KL.HttpScheduler.Api
 {
     public class Startup
     {
-        public static bool UnitTest = false;
         private Config Config { get; set; }
         public Startup(IConfiguration configuration)
         {
@@ -50,7 +49,7 @@ namespace KL.HttpScheduler.Api
 
             services.AddSingleton<SchedulerRunner>();
 
-            if (UnitTest)
+            if (Config.UnitTest)
             {
                 services.AddSingleton<IJobProcessor, MockJobProcessor>();
             }
@@ -61,6 +60,11 @@ namespace KL.HttpScheduler.Api
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, IApplicationLifetime applicationLifetime)
         {
+            if (!app.ApplicationServices.GetService<IDatabase>().IsConnected(""))
+            {
+                throw new TypeLoadException($"Redis server is not ready. Host={Config.RedisConnectionString}");
+            }
+
             app.ApplicationServices.GetService<SortedSetScheduleClient>();
             var schedulerRunner = app.ApplicationServices.GetService<SchedulerRunner>();
             var manualEvent = new ManualResetEventSlim();

@@ -32,29 +32,37 @@ namespace KL.HttpScheduler
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async Task ScheduleAsync(IEnumerable<HttpJob> jobs, CancellationToken cancellationToken)
+        public async Task<IEnumerable<(bool, Exception)>> ScheduleAsync(IEnumerable<HttpJob> jobs, CancellationToken cancellationToken)
         {
             var idToJobs = new LinkedList<HashEntry>();
             var scheduleItems = new LinkedList<SortedSetEntry>();
             var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-            foreach (var queueItemOrigin in jobs)
+            var ret = new List<(bool, Exception)>();
+            foreach (var _ in jobs)
             {
-                var queueItem = JsonConvert.DeserializeObject<HttpJob>(JsonConvert.SerializeObject(queueItemOrigin));
+                var queueItem = JsonConvert.DeserializeObject<HttpJob>(JsonConvert.SerializeObject(_));
                 queueItem.EnqueuedTime = now;
 
                 var redisValue = (RedisValue)JsonConvert.SerializeObject(queueItem);
 
                 if (queueItem.ScheduleDequeueTime < now)
                 {
-                    throw new ArgumentException(
+                    ret.Add((false, new ArgumentException(
                         $"Cannot schedule item in the past!. Now={now}, ScheduleDequeueTime={queueItem.ScheduleDequeueTime}, JobMessage={JsonConvert.SerializeObject(queueItem)}",
-                        nameof(jobs));
+                        nameof(queueItem.ScheduleDequeueTime))));
                 }
 
-                if (queueItem.IsCancellable)
+                if (await _database.HashExistsAsync(_hashKey, queueItem.Id))
                 {
-                    idToJobs.AddLast(new HashEntry(queueItem.Id, redisValue));
+                    ret.Add((false, new ArgumentException(
+                        $"Job with id={queueItem.Id} already exists!", 
+                        nameof(queueItem.Id)
+                        )));
                 }
+
+                ret.Add((true, null));
+
+                idToJobs.AddLast(new HashEntry(queueItem.Id, redisValue));
 
                 scheduleItems.AddLast(new SortedSetEntry(redisValue, queueItem.ScheduleDequeueTime));
             }
@@ -66,6 +74,7 @@ namespace KL.HttpScheduler
             {
                 await _database.SortedSetAddAsync(_sortedSetKey, scheduleItems.ToArray()).ConfigureAwait(false);
             }
+            return ret;
         }
 
         /// <summary>
