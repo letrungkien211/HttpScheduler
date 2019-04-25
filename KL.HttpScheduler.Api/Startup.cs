@@ -30,6 +30,10 @@ namespace KL.HttpScheduler.Api
             Config = Configuration.GetSection("Config").Get<Config>() ?? new Config();
 
             services.AddHttpClient();
+            services.AddHttpClient(ForwardJob.ForwardClientName, client =>
+            {
+                client.BaseAddress = Config.ForwardUri;
+            });
 
             services.AddSingleton<IDatabase>(_ =>
             {
