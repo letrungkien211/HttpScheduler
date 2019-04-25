@@ -44,16 +44,3 @@ spec:
     protocol: "TCP"
     port: 8081
     targetPort: 80
-
-# Ingress can only see service in default namespace. Specify the external name for this service to be accessed by ingress.
----
-apiVersion: v1
-kind: Service
-metadata:
-  namespace: default
-  name: '#{API_IMAGENAME}#'
-spec:
-  type: ExternalName
-  externalName: '#{API_IMAGENAME}#.#{NAMESPACE}#.svc.cluster.local'
-  ports:
-  - port: 8081
