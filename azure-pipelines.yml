@@ -11,7 +11,7 @@ pool:
 
 variables:
   buildConfiguration: 'Release'
-  tag: $(ACRNAME).azurecr.io/$(IMAGENAME)
+  tag: $(ACRNAME).azurecr.io/$(API.IMAGENAME):$(Build.SourceBranchName)-$(Build.BuildId)
 
 steps:
   - bash: docker build -f ./KL.HttpScheduler.Api/Dockerfile -t $(tag) .
@@ -19,4 +19,4 @@ steps:
   - bash: docker push $(tag)
   - bash: redisid=`docker run -p 6379:6379 -d redis`
   - bash: dotnet test 
-  - bash: docker stop $redisid
+  - bash: docker stop $(docker ps -aq)

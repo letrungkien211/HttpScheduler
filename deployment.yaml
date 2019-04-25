@@ -2,20 +2,20 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   namespace: #{NAMESPACE}#
-  name: #{IMAGENAME}#-api
+  name: #{API.IMAGENAME}#
 spec:
   replicas: #{Replicas}#
   selector:
     matchLabels:
-      app: #{IMAGENAME}#-api
+      app: #{API.IMAGENAME}#
   template:
     metadata:
       labels:
-        app: #{IMAGENAME}#-api
+        app: #{API.IMAGENAME}#
     spec:
       containers:
-      - name: #{IMAGENAME}#-api
-        image: #{ACRNAME}#.azurecr.io/#{IMAGENAME}#:#{Build.SourceBranchName}#-#{Build.BuildId}#
+      - name: #{API.IMAGENAME}#
+        image: #{ACRNAME}#.azurecr.io/#{API.IMAGENAME}#:#{Build.SourceBranchName}#-#{Build.BuildId}#
         env:
           - name: ASPNETCORE_ENVIRONMENT
             value: '#{ASPNETCORE_ENVIRONMENT}#'
