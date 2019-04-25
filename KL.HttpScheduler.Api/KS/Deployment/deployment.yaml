@@ -35,7 +35,10 @@ metadata:
   namespace: '#{NAMESPACE}#'
   name: '#{API_IMAGENAME}#'
 spec:
-  type: ExternalName
-  externalName: '#{API_IMAGENAME}#.#{NAMESPACE}#.svc.cluster.local'
+  selector:
+    app: '#{API_IMAGENAME}#'
   ports:
-  - port: 8081
+  - name: "http-port"
+    protocol: "TCP"
+    port: 8081
+    targetPort: 80
