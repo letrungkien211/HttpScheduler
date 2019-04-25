@@ -26,7 +26,7 @@ steps:
       targetFiles: 'deployment.yaml'
       verbosity: 'detailed'
       keepToken: true
-  - task: artifactDropTask@0
+  - task: PublishBuildArtifacts@1
     inputs:
-      sourcePath: './KL.HttpScheduler.Api/Deployment/'
+      pathtoPublish: './KL.HttpScheduler.Api/Deployment/'
     
