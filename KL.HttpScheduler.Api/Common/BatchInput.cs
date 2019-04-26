@@ -6,7 +6,7 @@ namespace KL.HttpScheduler.Api.Common
     /// <summary>
     /// Schedule Input
     /// </summary>
-    public class ScheduleInput
+    public class BatchInput
     {
         [JsonRequired]
         [JsonProperty("jobs")]

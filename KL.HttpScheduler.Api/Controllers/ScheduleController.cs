@@ -5,12 +5,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Threading.Tasks.Dataflow;
 
 namespace KL.HttpScheduler.Api.Controllers
 {
     [Route("api/[controller]")]
-    [Route("[controller]")]
     [ApiController]
     public class JobsController : ControllerBase
     {
@@ -19,14 +17,6 @@ namespace KL.HttpScheduler.Api.Controllers
         {
             this.sortedSetScheduleClient = sortedSetScheduleClient;
         }
-        [HttpPost("batch")]
-        public Task<IEnumerable<(bool, Exception)>> ScheduleBatch(
-            [FromBody]ScheduleInput scheduleInput,
-            CancellationToken cancellationToken)
-        {
-            return sortedSetScheduleClient.ScheduleAsync(scheduleInput.Jobs, cancellationToken);
-        }
-
         [HttpPost("")]
         public async Task<IActionResult> Schedule(
             [FromBody]HttpJob httpJob,
@@ -75,6 +65,14 @@ namespace KL.HttpScheduler.Api.Controllers
         public async Task<IEnumerable<HttpJob>> List(string id)
         {
             return await sortedSetScheduleClient.ListAsync();
+        }
+
+        [HttpPost("batch")]
+        public Task<IEnumerable<(bool, Exception)>> ScheduleBatch(
+                [FromBody]BatchInput batchInput,
+                CancellationToken cancellationToken)
+        {
+            return sortedSetScheduleClient.ScheduleAsync(batchInput.Jobs, cancellationToken);
         }
     }
 }
