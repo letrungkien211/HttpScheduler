@@ -50,6 +50,7 @@ namespace KL.HttpScheduler
                     ret.Add((false, new ArgumentException(
                         $"Cannot schedule item in the past!. Now={now}, ScheduleDequeueTime={queueItem.ScheduleDequeueTime}, JobMessage={JsonConvert.SerializeObject(queueItem)}",
                         nameof(queueItem.ScheduleDequeueTime))));
+                    continue;
                 }
 
                 if (await _database.HashExistsAsync(_hashKey, queueItem.Id))
@@ -58,6 +59,7 @@ namespace KL.HttpScheduler
                         $"Job with id={queueItem.Id} already exists!", 
                         nameof(queueItem.Id)
                         )));
+                    continue;
                 }
 
                 ret.Add((true, null));
