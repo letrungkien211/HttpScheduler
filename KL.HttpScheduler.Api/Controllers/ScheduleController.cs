@@ -68,11 +68,19 @@ namespace KL.HttpScheduler.Api.Controllers
         }
 
         [HttpPost("batch")]
-        public Task<IEnumerable<(bool, Exception)>> ScheduleBatch(
+        public async Task<BatchOutput> ScheduleBatch(
                 [FromBody]BatchInput batchInput,
                 CancellationToken cancellationToken)
         {
-            return sortedSetScheduleClient.ScheduleAsync(batchInput.Jobs, cancellationToken);
+            var rets = await sortedSetScheduleClient.ScheduleAsync(batchInput.Jobs, cancellationToken);
+            return new BatchOutput()
+            {
+                Results = rets.Select(x => new ScheduleStatus()
+                {
+                    Success = x.Item1,
+                    Exception = x.Item2
+                }).ToList()
+            };
         }
     }
 }
