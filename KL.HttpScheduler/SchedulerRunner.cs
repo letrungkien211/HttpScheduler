@@ -14,30 +14,15 @@ namespace KL.HttpScheduler
     public class SchedulerRunner
     {
         private SortedSetScheduleClient SortedSetDequeueClient { get; }
-        private ActionBlock<HttpJob> ActionBlock { get; }
+        private MyActionBlock ActionBlock { get; }
         public SchedulerRunner(
             SortedSetScheduleClient sortedSetDequeueClient, 
-            ActionBlock<HttpJob> actionBlock
+            MyActionBlock actionBlock
             )
         {
             SortedSetDequeueClient = sortedSetDequeueClient;
 
             ActionBlock = actionBlock;
-            
-            // new ActionBlock<HttpJob>(async (httpJob) =>
-            // {
-            //     try
-            //     {
-            //         using(var cancellationSource = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
-            //         {
-            //             await jobProcessor.ProcessAsync(httpJob, cancellationSource.Token).ConfigureAwait(false);
-            //         }
-            //     }
-            //     catch(Exception)
-            //     {
-            //         // Put logging here
-            //     }
-            // });
         }
         /// <summary>
         /// Run async
@@ -51,7 +36,7 @@ namespace KL.HttpScheduler
                 var httpJob = await SortedSetDequeueClient.DequeueAsync(cancellationToken).ConfigureAwait(false);
                 if (httpJob != null)
                 {
-                    if(!ActionBlock.Post(httpJob)){
+                    if(!ActionBlock.Post(httpJob, true)){
                         // Put error log here.
                     }
                 }

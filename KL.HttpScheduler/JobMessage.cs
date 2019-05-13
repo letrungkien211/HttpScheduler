@@ -13,9 +13,6 @@ namespace KL.HttpScheduler
         [JsonRequired]
         public string Id { get; set; }
 
-        [JsonProperty("isCancellable")]
-        public bool IsCancellable { get; set; } = false;
-
         [JsonProperty("scheduleDequeueTime")]
         [JsonRequired]
         public long ScheduleDequeueTime { get; set; }
@@ -27,8 +24,7 @@ namespace KL.HttpScheduler
         public Uri Uri { get; set; }
 
         [JsonProperty("httpMethod")]
-        public string HttpMethod { get; set; } = "POST";
-
+        public string HttpMethod { get; set; } = "GET";
 
         [JsonProperty("contentType")]
         public string ContentType { get; set; } = "application/json";

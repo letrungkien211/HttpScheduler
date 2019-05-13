@@ -1,0 +1,45 @@
+# Define the deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: '#{NAMESPACE}#'
+  name: '#{API_IMAGENAME}#'
+spec:
+  replicas: #{Replicas}#
+  selector:
+    matchLabels:
+      app: '#{API_IMAGENAME}#'
+  template:
+    metadata:
+      labels:
+        app: '#{API_IMAGENAME}#'
+    spec:
+      containers:
+      - name: '#{API_IMAGENAME}#'
+        image: '#{ACRNAME}#.azurecr.io/#{API_IMAGENAME}#:#{Build.SourceBranchName}#-#{Build.BuildId}#'
+        env:
+          - name: ASPNETCORE_ENVIRONMENT
+            value: '#{ASPNETCORE_ENVIRONMENT}#'
+          - name: ApplicationInsights__InstrumentationKey
+            value: '#{InstrumentationKey}#'
+          - name: Config__RedisConnectionString
+            value: '#{RedisConnectionString}#'
+        ports:
+        - containerPort: 80
+      imagePullSecrets:
+        - name: '#{ACRNAME}#'
+
+# Define the service to forward to above deployment
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: '#{API_IMAGENAME}#'
+spec:
+  selector:
+    app: '#{API_IMAGENAME}#'
+  ports:
+  - name: "http-port"
+    protocol: "TCP"
+    port: 8081
+    targetPort: 80
