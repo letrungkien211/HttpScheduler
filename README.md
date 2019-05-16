@@ -1,8 +1,8 @@
 # Http Jobs Scheduler
 
-# Motivation
-## Create an internal API to dynamically schedule jobs (tasks, actions) with high precision (100ms).
+## Motivation
+* Create an internal API to dynamically schedule jobs (tasks, actions) with high precision (100ms).
 
-# Design
+## Design
 
-# How to use
+## How to use
