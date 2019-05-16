@@ -1,4 +1,6 @@
-﻿namespace KL.HttpScheduler
+﻿using System;
+
+namespace KL.HttpScheduler
 {
     /// <summary>
     /// Configuration
@@ -9,5 +11,7 @@
         public string HashKey { get; set; } = "hash";
         public string SortedSetKey { get; set; } = "sortedset";
         public bool EnableForward { get; set; } = false;
+        public bool UnitTest { get; set; } = false;
+        public Uri ForwardUri { get; set; } = new Uri("http://localhost:5000");
     }
 }
