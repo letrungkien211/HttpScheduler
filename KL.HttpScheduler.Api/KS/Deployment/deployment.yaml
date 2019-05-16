@@ -42,18 +42,29 @@ spec:
   ports:
   - name: "http-port"
     protocol: "TCP"
-    port: 8081
-    targetPort: 80
+    port: 80
 
 # Ingress can only see service in default namespace. Specify the external name for this service to be accessed by ingress.
 ---
-apiVersion: v1
-kind: Service
+apiVersion: extensions/v1beta1
+kind: Ingress
 metadata:
-  namespace: default
-  name: '#{API_IMAGENAME}#'
+  namespace: '#{NAMESPACE}#'
+  name: '#{NAMESPACE}#-ingress'
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
 spec:
-  type: ExternalName
-  externalName: '#{API_IMAGENAME}#.#{NAMESPACE}#.svc.cluster.local'
-  ports:
-  - port: 8081
+  tls:
+  - hosts:
+    - #{HOST}#
+    secretName: #{SECRETNAME}#
+  rules:
+  - host: #{HOST}#
+    http:
+      paths:
+      - path: /scheduler/?(.*)
+        backend:
+          serviceName: #{API_IMAGENAME}#
+          servicePort: "http-port"
