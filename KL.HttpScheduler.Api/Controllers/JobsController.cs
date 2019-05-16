@@ -1,14 +1,14 @@
 ﻿using KL.HttpScheduler.Api.Common;
 using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Threading.Tasks.Dataflow;
 
 namespace KL.HttpScheduler.Api.Controllers
 {
     [Route("api/[controller]")]
-    [Route("[controller]")]
     [ApiController]
     public class JobsController : ControllerBase
     {
@@ -18,11 +18,19 @@ namespace KL.HttpScheduler.Api.Controllers
             this.sortedSetScheduleClient = sortedSetScheduleClient;
         }
         [HttpPost("")]
-        public Task Schedule(
-            [FromBody]ScheduleInput scheduleInput,
+        public async Task<IActionResult> Schedule(
+            [FromBody]HttpJob httpJob,
             CancellationToken cancellationToken)
         {
-            return sortedSetScheduleClient.ScheduleAsync(scheduleInput.Jobs, cancellationToken);
+            var (success, ex) = (await sortedSetScheduleClient.ScheduleAsync(new[] { httpJob }, cancellationToken)).First();
+            if (success)
+            {
+                return Ok();
+            }
+            else
+            {
+                return BadRequest(ex);
+            }
         }
 
         [HttpDelete("{id}")]
@@ -57,6 +65,22 @@ namespace KL.HttpScheduler.Api.Controllers
         public async Task<IEnumerable<HttpJob>> List(string id)
         {
             return await sortedSetScheduleClient.ListAsync();
+        }
+
+        [HttpPost("batch")]
+        public async Task<BatchOutput> ScheduleBatch(
+                [FromBody]BatchInput batchInput,
+                CancellationToken cancellationToken)
+        {
+            var rets = await sortedSetScheduleClient.ScheduleAsync(batchInput.Jobs, cancellationToken);
+            return new BatchOutput()
+            {
+                Results = rets.Select(x => new ScheduleStatus()
+                {
+                    Success = x.Item1,
+                    Exception = x.Item2
+                }).ToList()
+            };
         }
     }
 }

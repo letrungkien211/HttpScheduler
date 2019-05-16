@@ -1,22 +1,20 @@
-﻿using KL.HttpScheduler.Api.Common;
-using Microsoft.ApplicationInsights;
+﻿using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
+using Swashbuckle.AspNetCore.Swagger;
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Threading.Tasks.Dataflow;
 
 namespace KL.HttpScheduler.Api
 {
     public class Startup
     {
-        public static bool UnitTest = false;
         private Config Config { get; set; }
         public Startup(IConfiguration configuration)
         {
@@ -31,6 +29,10 @@ namespace KL.HttpScheduler.Api
             Config = Configuration.GetSection("Config").Get<Config>() ?? new Config();
 
             services.AddHttpClient();
+            services.AddHttpClient(ForwardJob.ForwardClientName, client =>
+            {
+                client.BaseAddress = Config.ForwardUri;
+            });
 
             services.AddSingleton<IDatabase>(_ =>
             {
@@ -49,18 +51,36 @@ namespace KL.HttpScheduler.Api
             services.AddSingleton<MyActionBlock>();
 
             services.AddSingleton<SchedulerRunner>();
+            services.AddLogging(config =>
+            {
+            });
 
-            if (UnitTest)
+            // Register the Swagger generator, defining 1 or more Swagger documents
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new Info { Title = "My API", Version = "v1" });
+            });
+
+            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
+                    .AddJsonOptions(options =>
+                    {
+                        options.SerializerSettings.NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore;
+                    });
+
+            if (Config.UnitTest)
             {
                 services.AddSingleton<IJobProcessor, MockJobProcessor>();
             }
-
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, IApplicationLifetime applicationLifetime)
         {
+            if (!app.ApplicationServices.GetService<IDatabase>().IsConnected(""))
+            {
+                throw new TypeLoadException($"Redis server is not ready. Host={Config.RedisConnectionString}");
+            }
+
             app.ApplicationServices.GetService<SortedSetScheduleClient>();
             var schedulerRunner = app.ApplicationServices.GetService<SchedulerRunner>();
             var manualEvent = new ManualResetEventSlim();
@@ -95,6 +115,16 @@ namespace KL.HttpScheduler.Api
             {
                 app.UseDeveloperExceptionPage();
             }
+
+            // Enable middleware to serve generated Swagger as a JSON endpoint.
+            app.UseSwagger();
+
+            // Enable middleware to serve swagger-ui (HTML, JS, CSS, etc.), 
+            // specifying the Swagger JSON endpoint.
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
+            });
 
             app.UseMvc();
         }
