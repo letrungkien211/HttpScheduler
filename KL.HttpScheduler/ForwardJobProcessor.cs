@@ -42,7 +42,7 @@ namespace KL.HttpScheduler
 
                 using (var cancelSource = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
                 {
-                    await client.SendAsync(req, cancelSource.Token);
+                    await client.SendAsync(req, cancelSource.Token).ConfigureAwait(false);
                 }
             }
             catch(Exception ex)

@@ -53,7 +53,7 @@ namespace KL.HttpScheduler
                     continue;
                 }
 
-                if (await _database.HashExistsAsync(_hashKey, queueItem.Id))
+                if (await _database.HashExistsAsync(_hashKey, queueItem.Id).ConfigureAwait(false))
                 {
                     ret.Add((false, new ArgumentException(
                         $"Job with id={queueItem.Id} already exists!", 
@@ -112,7 +112,7 @@ namespace KL.HttpScheduler
 
         public async Task<IEnumerable<HttpJob>> ListAsync()
         {
-            return (await _database.SortedSetRangeByRankAsync(_sortedSetKey)).Select(x => JsonConvert.DeserializeObject<HttpJob>(x));
+            return (await _database.SortedSetRangeByRankAsync(_sortedSetKey).ConfigureAwait(false)).Select(x => JsonConvert.DeserializeObject<HttpJob>(x));
         }
 
         /// <summary>
@@ -141,7 +141,7 @@ namespace KL.HttpScheduler
                     return null;
                 }
 
-                await _database.HashDeleteAsync(_hashKey, message.Id);
+                await _database.HashDeleteAsync(_hashKey, message.Id).ConfigureAwait(false);
 
                 return message;
             }
