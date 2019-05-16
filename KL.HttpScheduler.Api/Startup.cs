@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 using Swashbuckle.AspNetCore.Swagger;
 using System;
@@ -50,6 +51,9 @@ namespace KL.HttpScheduler.Api
             services.AddSingleton<MyActionBlock>();
 
             services.AddSingleton<SchedulerRunner>();
+            services.AddLogging(config =>
+            {
+            });
 
             // Register the Swagger generator, defining 1 or more Swagger documents
             services.AddSwaggerGen(c =>
