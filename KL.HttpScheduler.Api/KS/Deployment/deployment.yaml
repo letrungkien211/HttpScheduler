@@ -43,7 +43,7 @@ spec:
     protocol: "TCP"
     port: 80
 
-# Ingress can only see service in default namespace. Specify the external name for this service to be accessed by ingress.
+# Define the ingress
 ---
 apiVersion: extensions/v1beta1
 kind: Ingress
