@@ -53,7 +53,6 @@ namespace KL.HttpScheduler.Api
             services.AddSingleton<SchedulerRunner>();
             services.AddLogging(config =>
             {
-                //config.AddFilter()
             });
 
             // Register the Swagger generator, defining 1 or more Swagger documents
