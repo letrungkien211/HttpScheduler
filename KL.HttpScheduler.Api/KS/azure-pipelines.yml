@@ -18,16 +18,16 @@ variables:
 steps:
   - bash: docker build -f ./KL.HttpScheduler.Api/Dockerfile -t $(tag) .
     displayName: Build docker file
-  - bash: docker login --username $(ACRNAME) --password $(ACRPASS) $(ACRNAME).azurecr.io
-    displayName: Login to $(ACRNAME).azurecr.io
-  - bash: docker push $(tag)
-    displayName: Push $(tag) to $(ACRNAME).azurecr.io
   - bash: redisid=`docker run -p 6379:6379 -d redis`
     displayName: Run redis
   - bash: dotnet test 
     displayName: Run tests
   - bash: docker stop $(docker ps -aq)
     displayName: Stop all dockers (redis)
+  - bash: docker login --username $(ACRNAME) --password $(ACRPASS) $(ACRNAME).azurecr.io
+    displayName: Login to $(ACRNAME).azurecr.io
+  - bash: docker push $(tag)
+    displayName: Push $(tag) to $(ACRNAME).azurecr.io
   - task: replacetokens@3
     displayName: Replace environment variables
     inputs:
