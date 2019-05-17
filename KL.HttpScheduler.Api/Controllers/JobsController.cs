@@ -67,7 +67,7 @@ namespace KL.HttpScheduler.Api.Controllers
             return await sortedSetScheduleClient.ListAsync();
         }
 
-        [HttpPost("batch")]
+        [HttpPost("Batch")]
         public async Task<BatchOutput> ScheduleBatch(
                 [FromBody]BatchInput batchInput,
                 CancellationToken cancellationToken)
