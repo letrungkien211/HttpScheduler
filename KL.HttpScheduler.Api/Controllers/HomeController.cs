@@ -4,6 +4,7 @@ namespace KL.HttpScheduler.Api.Controllers
 {
     [Route("")]
     [ApiController]
+    [ApiExplorerSettings(IgnoreApi = true)]
     public class HomeController : ControllerBase
     {
         [HttpGet("")]
