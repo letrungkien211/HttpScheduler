@@ -48,7 +48,7 @@ spec:
   ports:
   - name: "http-port"
     protocol: "TCP"
-    port: "http-port"
+    port: 80
 
 # Define the ingress
 ---
