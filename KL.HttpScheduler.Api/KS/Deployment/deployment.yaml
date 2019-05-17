@@ -26,6 +26,12 @@ spec:
             value: '#{RedisConnectionString}#'
         ports:
         - containerPort: 80
+          name:  "http-port"
+        readinessProbe:
+          httpGet:
+            path: /
+            port: "http-port"
+          initialDelaySeconds: 10
       imagePullSecrets:
         - name: '#{ACRNAME}#'
 
@@ -42,7 +48,7 @@ spec:
   ports:
   - name: "http-port"
     protocol: "TCP"
-    port: 80
+    port: "http-port"
 
 # Define the ingress
 ---
