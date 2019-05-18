@@ -52,7 +52,7 @@ namespace KL.HttpScheduler.Api.Controllers
         [HttpPost("[action]")]
         public IActionResult Execute([FromBody]HttpJob httpJob, [FromServices]MyActionBlock actionBlock)
         {
-            return actionBlock.Post(httpJob, false) ? Ok() : (IActionResult)StatusCode((int)HttpStatusCode.ServiceUnavailable, "Queue is full");
+            return actionBlock.Post(httpJob) ? Ok() : (IActionResult)StatusCode((int)HttpStatusCode.ServiceUnavailable, "Queue is full");
         }
 
         [HttpGet("{id}")]

@@ -29,10 +29,6 @@ namespace KL.HttpScheduler.Api
             Config = Configuration.GetSection("Config").Get<Config>() ?? new Config();
 
             services.AddHttpClient();
-            services.AddHttpClient(ForwardJob.ForwardClientName, client =>
-            {
-                client.BaseAddress = Config.ForwardUri;
-            });
 
             services.AddSingleton<IDatabase>(_ =>
             {
@@ -47,7 +43,6 @@ namespace KL.HttpScheduler.Api
             services.AddSingleton<IJobProcessor, JobProcessor>();
             services.AddSingleton<JobProcessorWrapper>();
             services.AddSingleton<TelemetryClient>();
-            services.AddSingleton<ForwardJob>();
             services.AddSingleton<MyActionBlock>();
 
             services.AddSingleton<SchedulerRunner>();
@@ -87,7 +82,6 @@ namespace KL.HttpScheduler.Api
             var manualEvent = new ManualResetEventSlim();
 
             var actionBlock = app.ApplicationServices.GetService<MyActionBlock>();
-            actionBlock.EnableForward = Config.EnableForward;
 
             applicationLifetime.ApplicationStarted.Register(() =>
             {

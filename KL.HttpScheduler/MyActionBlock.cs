@@ -10,7 +10,6 @@ namespace KL.HttpScheduler
     public class MyActionBlock
     {
         private ActionBlock<ActionBlockInput> ActionBlock { get; }
-        public bool EnableForward { get; set; }
 
         /// <summary>
         /// Action Block
@@ -18,20 +17,12 @@ namespace KL.HttpScheduler
         /// <param name="forwardJobProcessor"></param>
         /// <param name="jobProcessorWrapper"></param>
         public MyActionBlock(
-            ForwardJob forwardJobProcessor, 
             JobProcessorWrapper jobProcessorWrapper
             )
         {
             ActionBlock = new ActionBlock<ActionBlockInput>((input) =>
             {
-                if (input.Forward)
-                {
-                    return forwardJobProcessor.ForwardAsync(input.HttpJob);
-                }
-                else
-                {
-                    return jobProcessorWrapper.ProcessAsync(input.HttpJob);
-                }
+                return jobProcessorWrapper.ProcessAsync(input.HttpJob);
             });
 
         }
@@ -42,12 +33,11 @@ namespace KL.HttpScheduler
             return ActionBlock.Completion;
         }
 
-        public bool Post(HttpJob httpJob, bool forward)
+        public bool Post(HttpJob httpJob)
         {
             return ActionBlock.Post(new ActionBlockInput()
             {
-                HttpJob = httpJob,
-                Forward = EnableForward && forward
+                HttpJob = httpJob
             });
         }
 
@@ -57,7 +47,6 @@ namespace KL.HttpScheduler
         private class ActionBlockInput
         {
             public HttpJob HttpJob { get; set; }
-            public bool Forward { get; set; }
         }
     }
 }

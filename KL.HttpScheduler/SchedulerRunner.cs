@@ -36,7 +36,7 @@ namespace KL.HttpScheduler
                 var httpJob = await SortedSetDequeueClient.DequeueAsync(cancellationToken).ConfigureAwait(false);
                 if (httpJob != null)
                 {
-                    if(!ActionBlock.Post(httpJob, true)){
+                    if(!ActionBlock.Post(httpJob)){
                         // Put error log here.
                     }
                     else
