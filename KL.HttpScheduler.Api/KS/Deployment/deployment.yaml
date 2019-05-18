@@ -24,6 +24,8 @@ spec:
             value: '#{InstrumentationKey}#'
           - name: Config__RedisConnectionString
             value: '#{RedisConnectionString}#'
+          - name: Config__SwaggerBasePath
+            value: '/scheduler'
         ports:
         - containerPort: 80
           name:  "http-port"
