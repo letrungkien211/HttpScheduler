@@ -124,6 +124,7 @@ namespace KL.HttpScheduler.Api
             app.UseSwaggerUI(c =>
             {
                 c.SwaggerEndpoint("v1/swagger.json", "My API V1");
+                c.RoutePrefix = string.Empty;
             });
 
             app.UseMvc();
