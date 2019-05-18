@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -17,6 +18,7 @@ namespace KL.HttpScheduler.Api.Controllers
         {
             this.sortedSetScheduleClient = sortedSetScheduleClient;
         }
+
         [HttpPost("")]
         public async Task<IActionResult> Schedule(
             [FromBody]HttpJob httpJob,
@@ -50,8 +52,7 @@ namespace KL.HttpScheduler.Api.Controllers
         [HttpPost("[action]")]
         public IActionResult Execute([FromBody]HttpJob httpJob, [FromServices]MyActionBlock actionBlock)
         {
-            actionBlock.Post(httpJob, false);
-            return Ok();
+            return actionBlock.Post(httpJob, false) ? Ok() : (IActionResult)StatusCode((int)HttpStatusCode.ServiceUnavailable, "Queue is full");
         }
 
         [HttpGet("{id}")]
@@ -62,7 +63,7 @@ namespace KL.HttpScheduler.Api.Controllers
         }
 
         [HttpGet("")]
-        public async Task<IEnumerable<HttpJob>> List(string id)
+        public async Task<IEnumerable<HttpJob>> GetAll()
         {
             return await sortedSetScheduleClient.ListAsync();
         }
