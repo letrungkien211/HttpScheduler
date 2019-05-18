@@ -17,6 +17,7 @@ namespace KL.HttpScheduler.Api.Controllers
         {
             this.sortedSetScheduleClient = sortedSetScheduleClient;
         }
+
         [HttpPost("")]
         public async Task<IActionResult> Schedule(
             [FromBody]HttpJob httpJob,
@@ -62,7 +63,7 @@ namespace KL.HttpScheduler.Api.Controllers
         }
 
         [HttpGet("")]
-        public async Task<IEnumerable<HttpJob>> List(string id)
+        public async Task<IEnumerable<HttpJob>> GetAll()
         {
             return await sortedSetScheduleClient.ListAsync();
         }
