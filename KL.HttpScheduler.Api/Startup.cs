@@ -1,4 +1,5 @@
-﻿using Microsoft.ApplicationInsights;
+﻿using KL.HttpScheduler.Api.Common;
+using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -58,6 +59,7 @@ namespace KL.HttpScheduler.Api
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new Info { Title = "My API", Version = "v1" });
+                c.DocumentFilter<BasePathDocumentFilter>(Config.SwaggerBasePath);
             });
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2)

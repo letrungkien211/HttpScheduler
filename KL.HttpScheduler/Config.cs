@@ -13,5 +13,6 @@ namespace KL.HttpScheduler
         public bool EnableForward { get; set; } = false;
         public bool UnitTest { get; set; } = false;
         public Uri ForwardUri { get; set; } = new Uri("http://localhost:5000");
+        public string SwaggerBasePath { get; set; } = "/scheduler";
     }
 }
