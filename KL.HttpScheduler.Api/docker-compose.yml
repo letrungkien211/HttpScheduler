@@ -1,0 +1,14 @@
+version: '3'
+services: 
+  web:
+    build:
+      context: ..
+      dockerfile: ./KL.HttpScheduler.Api/Dockerfile
+    environment: 
+      - Config__RedisConnectionString=redis:6379,ssl=False,abortConnect=False
+    depends_on: 
+      - redis
+    ports:
+      - "8080:80"
+  redis:
+    image: redis

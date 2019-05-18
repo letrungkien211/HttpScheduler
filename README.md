@@ -1,7 +1,7 @@
 # Http Jobs Scheduler
 
 ## Motivation
-* Create an API to dynamically schedule jobs (tasks, actions) with high precision (100ms).
+* Create an API to dynamically schedule jobs (tasks, actions) with high precision.
 * Use cases
     * Send scheduled messages
     * Create reminders
@@ -9,4 +9,17 @@
 
 ## Design
 * Make use of sorted set in redis cache for scheduling
-## How to use
+## How to try
+* Build
+```console
+    cd KL.HttpScheduler.Api
+    docker-compose build
+    docker-compose up
+```
+* Go to http://localhost:8080/swagger
+
+## Configurable parameters
+* Config__RedisConnectionString
+
+## Notes
+* To ensure the scalability, make sure the callback endpoint returns as fast as possible. Less than 10ms should be reached. Use fire-and-forget approach if neccessary.

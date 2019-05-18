@@ -58,7 +58,7 @@ namespace KL.HttpScheduler.Api
             // Register the Swagger generator, defining 1 or more Swagger documents
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new Info { Title = "My API", Version = "v1" });
+                c.SwaggerDoc("v1", new Info { Title = "Http Jobs Scheduler", Version = "v1" });
                 c.DocumentFilter<BasePathDocumentFilter>(Config.SwaggerBasePath);
             });
 
@@ -124,7 +124,7 @@ namespace KL.HttpScheduler.Api
             // specifying the Swagger JSON endpoint.
             app.UseSwaggerUI(c =>
             {
-                c.SwaggerEndpoint("v1/swagger.json", "My API V1");
+                c.SwaggerEndpoint("v1/swagger.json", "Http Jobs Scheduler");
             });
 
             app.UseMvc();
