@@ -16,6 +16,7 @@ namespace KL.HttpScheduler.Api
 
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
+                .UseApplicationInsights()
                 .ConfigureLogging((hostingContext, builder) =>
                 {
                     builder.AddConsole();
