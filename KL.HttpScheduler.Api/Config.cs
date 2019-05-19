@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace KL.HttpScheduler
+﻿namespace KL.HttpScheduler.Api
 {
     /// <summary>
     /// Configuration

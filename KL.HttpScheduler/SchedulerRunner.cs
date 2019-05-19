@@ -1,5 +1,6 @@
-﻿using Microsoft.ApplicationInsights;
-using Microsoft.ApplicationInsights.DataContracts;
+﻿using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -12,22 +13,22 @@ namespace KL.HttpScheduler
     {
         private SortedSetScheduleClient SortedSetDequeueClient { get; }
         private MyActionBlock ActionBlock { get; }
-        private TelemetryClient TelemetryClient { get; }
+        private ILogger<SchedulerRunner> Logger { get; }
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="sortedSetDequeueClient"></param>
         /// <param name="actionBlock"></param>
-        /// <param name="telemetryClient"></param>
+        /// <param name="logger"></param>
         public SchedulerRunner(
-            SortedSetScheduleClient sortedSetDequeueClient, 
+            SortedSetScheduleClient sortedSetDequeueClient,
             MyActionBlock actionBlock,
-            TelemetryClient telemetryClient
+            ILogger<SchedulerRunner> logger
             )
         {
             SortedSetDequeueClient = sortedSetDequeueClient;
             ActionBlock = actionBlock;
-            TelemetryClient = telemetryClient;
+            Logger = logger;
         }
         /// <summary>
         /// Run async
@@ -42,9 +43,21 @@ namespace KL.HttpScheduler
                 if (httpJob != null)
                 {
                     var success = ActionBlock.Post(httpJob);
-                    var telemetry = new EventTelemetry(success ? "EnqueueSuccess": "EnqueueFailure");
-                    telemetry.Context.Session.Id = httpJob.Id;
-                    TelemetryClient.TrackEvent(telemetry);
+
+                    using (Logger.BeginScope(new Dictionary<string, object>() {
+                        {"id", httpJob.Id },
+                        {"httpJob", JsonConvert.SerializeObject(httpJob) }
+                    }))
+                    {
+                        if (success)
+                        {
+                            Logger.LogTrace($"Id={httpJob.Id}. EnqueueSuccess");
+                        }
+                        else
+                        {
+                            Logger.LogError($"Id={httpJob.Id}. EnqueueFailure");
+                        }
+                    }
                 }
                 else
                 {

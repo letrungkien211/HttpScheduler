@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Examples;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace KL.HttpScheduler.Api.Controllers
@@ -26,7 +25,7 @@ namespace KL.HttpScheduler.Api.Controllers
         }
 
         /// <summary>
-        /// Schedule http jobs
+        /// Schedule a http job
         /// </summary>
         /// <param name="httpJob">Http Job</param>
         /// <returns></returns>
@@ -46,7 +45,7 @@ namespace KL.HttpScheduler.Api.Controllers
         }
 
         /// <summary>
-        /// Cancel http jobs
+        /// Cancel a http job by id
         /// </summary>
         /// <param name="id">httpjob id</param>
         /// <returns></returns>
@@ -65,7 +64,7 @@ namespace KL.HttpScheduler.Api.Controllers
         }
 
         /// <summary>
-        /// Get oustanding job by id. Execuated job cannot be get anymore
+        /// Get an oustanding http job by id
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
@@ -87,7 +86,7 @@ namespace KL.HttpScheduler.Api.Controllers
         }
 
         /// <summary>
-        /// Get number of outstanding jobs
+        /// Get number of outstanding http jobs
         /// </summary>
         /// <returns></returns>
         [HttpGet("Count")]

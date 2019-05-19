@@ -1,6 +1,7 @@
-﻿using Microsoft.ApplicationInsights;
-using Microsoft.ApplicationInsights.DataContracts;
+﻿using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -12,18 +13,18 @@ namespace KL.HttpScheduler
     public class JobProcessorWrapper
     {
         private IJobProcessor JobProcessor { get; }
-        private TelemetryClient TelemetryClient { get; }
+        private ILogger<JobProcessorWrapper> Logger { get; }
         private TimeSpan DefaultTimeout { get; } = TimeSpan.FromSeconds(5);
 
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="jobProcessor"></param>
-        /// <param name="telemetryClient"></param>
-        public JobProcessorWrapper(IJobProcessor jobProcessor, TelemetryClient telemetryClient)
+        /// <param name="logger"></param>
+        public JobProcessorWrapper(IJobProcessor jobProcessor, ILogger<JobProcessorWrapper> logger)
         {
             this.JobProcessor = jobProcessor;
-            this.TelemetryClient = telemetryClient;
+            this.Logger = logger;
         }
 
         /// <summary>
@@ -33,24 +34,23 @@ namespace KL.HttpScheduler
         /// <returns></returns>
         public async Task ProcessAsync(HttpJob httpJob)
         {
-            try
+            using (Logger.BeginScope(new Dictionary<string, object>() {
+                        {"id", httpJob.Id },
+                        {"httpJob", JsonConvert.SerializeObject(httpJob) }
+                    }))
             {
-                using (var cancellationSource = new CancellationTokenSource(DefaultTimeout))
+                try
                 {
-                    await this.JobProcessor.ProcessAsync(httpJob, cancellationSource.Token).ConfigureAwait(false);
+                    using (var cancellationSource = new CancellationTokenSource(DefaultTimeout))
+                    {
+                        await this.JobProcessor.ProcessAsync(httpJob, cancellationSource.Token).ConfigureAwait(false);
+                    }
+                    Logger.LogTrace($"Id={httpJob.Id}. ExecuteSuccess");
                 }
-                var telemetry = new EventTelemetry("ExecuteSuccess");
-                telemetry.Context.Session.Id = httpJob.Id;
-                this.TelemetryClient.TrackEvent(telemetry);
-            }
-            catch (Exception ex)
-            {
-                var telemetry = new ExceptionTelemetry(ex)
+                catch (Exception ex)
                 {
-                    ProblemId = "ExecuteFailure"
-                };
-                telemetry.Context.Session.Id = httpJob.Id;
-                this.TelemetryClient.TrackException(telemetry);
+                    Logger.LogError(ex, $"Id={httpJob.Id}. ExecuteException");
+                }
             }
         }
     }
