@@ -45,7 +45,7 @@ namespace KL.HttpScheduler
                     {
                         await this.JobProcessor.ProcessAsync(httpJob, cancellationSource.Token).ConfigureAwait(false);
                     }
-                    Logger.LogTrace($"Id={httpJob.Id}. ExecuteSuccess");
+                    Logger.LogInformation($"Id={httpJob.Id}. ExecuteSuccess");
                 }
                 catch (Exception ex)
                 {

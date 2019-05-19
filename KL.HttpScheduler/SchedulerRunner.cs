@@ -51,11 +51,11 @@ namespace KL.HttpScheduler
                     {
                         if (success)
                         {
-                            Logger.LogTrace($"Id={httpJob.Id}. EnqueueSuccess");
+                            Logger.LogInformation($"Id={httpJob.Id}. EnqueueSuccess");
                         }
                         else
                         {
-                            Logger.LogError($"Id={httpJob.Id}. EnqueueFailure");
+                            Logger.LogInformation($"Id={httpJob.Id}. EnqueueFailure");
                         }
                     }
                 }
