@@ -8,7 +8,7 @@
         /// <summary>
         /// Redis connection string
         /// </summary>
-        public string RedisConnectionString { get; set; } = "localhost:6379, ssl=False,abortConnect=False";
+        public string RedisConnectionString { get; set; } = "localhost:6379,ssl=False,abortConnect=False";
 
         /// <summary>
         /// Hash key
