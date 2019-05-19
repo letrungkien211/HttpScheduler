@@ -9,6 +9,8 @@ using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 using Swashbuckle.AspNetCore.Swagger;
 using System;
+using System.IO;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -56,6 +58,16 @@ namespace KL.HttpScheduler.Api
             {
                 c.SwaggerDoc("v1", new Info { Title = "Http Jobs Scheduler", Version = "v1" });
                 c.DocumentFilter<BasePathDocumentFilter>(Config.SwaggerBasePath);
+
+                var xmlFiles = new[] {
+                    $"{Assembly.GetExecutingAssembly().GetName().Name}.xml",
+                    $"{typeof(HttpJob).Assembly.GetName().Name}.xml"
+                };
+                foreach (var xmlFile in xmlFiles) {
+                    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+                    if (File.Exists(xmlPath))
+                        c.IncludeXmlComments(xmlPath);
+                }
             });
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2)

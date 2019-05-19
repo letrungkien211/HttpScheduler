@@ -42,6 +42,10 @@ namespace KL.HttpScheduler
             {
                 var queueItem = JsonConvert.DeserializeObject<HttpJob>(JsonConvert.SerializeObject(_));
                 queueItem.EnqueuedTime = now;
+                if (queueItem.ScheduleDequeueTime < 0)
+                {
+                    queueItem.ScheduleDequeueTime = now - queueItem.ScheduleDequeueTime;
+                }
 
                 var redisValue = (RedisValue)JsonConvert.SerializeObject(queueItem);
 

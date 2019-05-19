@@ -1,8 +1,5 @@
-﻿using Newtonsoft.Json;
-using Swashbuckle.AspNetCore.Swagger;
+﻿using Swashbuckle.AspNetCore.Swagger;
 using Swashbuckle.AspNetCore.SwaggerGen;
-using System;
-using System.Collections.Generic;
 
 namespace KL.HttpScheduler.Api.Common
 {
