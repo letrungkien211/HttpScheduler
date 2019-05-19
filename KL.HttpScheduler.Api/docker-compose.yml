@@ -6,6 +6,7 @@ services:
       dockerfile: ./KL.HttpScheduler.Api/Dockerfile
     environment: 
       - Config__RedisConnectionString=redis:6379,ssl=False,abortConnect=False
+      - ASPNETCORE_ENVIRONMENT=development
     depends_on: 
       - redis
     ports:
