@@ -13,6 +13,12 @@ namespace KL.HttpScheduler
         private SortedSetScheduleClient SortedSetDequeueClient { get; }
         private MyActionBlock ActionBlock { get; }
         private TelemetryClient TelemetryClient { get; }
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="sortedSetDequeueClient"></param>
+        /// <param name="actionBlock"></param>
+        /// <param name="telemetryClient"></param>
         public SchedulerRunner(
             SortedSetScheduleClient sortedSetDequeueClient, 
             MyActionBlock actionBlock,
@@ -32,7 +38,7 @@ namespace KL.HttpScheduler
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                var httpJob = await SortedSetDequeueClient.DequeueAsync(cancellationToken).ConfigureAwait(false);
+                var httpJob = await SortedSetDequeueClient.DequeueAsync().ConfigureAwait(false);
                 if (httpJob != null)
                 {
                     var success = ActionBlock.Post(httpJob);

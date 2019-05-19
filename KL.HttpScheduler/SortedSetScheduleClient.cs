@@ -30,9 +30,9 @@ namespace KL.HttpScheduler
         /// <summary>
         /// Dequeue async
         /// </summary>
-        /// <param name="cancellationToken"></param>
+        /// <param name="jobs"></param>
         /// <returns></returns>
-        public async Task<IEnumerable<(bool, Exception)>> ScheduleAsync(IEnumerable<HttpJob> jobs, CancellationToken cancellationToken)
+        public async Task<IEnumerable<(bool, Exception)>> ScheduleAsync(IEnumerable<HttpJob> jobs)
         {
             var idToJobs = new LinkedList<HashEntry>();
             var scheduleItems = new LinkedList<SortedSetEntry>();
@@ -84,7 +84,7 @@ namespace KL.HttpScheduler
         }
 
         /// <summary>
-        /// 
+        /// Cancel async
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
@@ -114,17 +114,29 @@ namespace KL.HttpScheduler
             return null;
         }
 
+        /// <summary>
+        /// List async
+        /// </summary>
+        /// <returns></returns>
         public async Task<IEnumerable<HttpJob>> ListAsync()
         {
             return (await _database.SortedSetRangeByRankAsync(_sortedSetKey).ConfigureAwait(false)).Select(x => JsonConvert.DeserializeObject<HttpJob>(x));
         }
 
         /// <summary>
+        /// Count
+        /// </summary>
+        /// <returns></returns>
+        public Task<long> CountAsync()
+        {
+            return _database.SortedSetLengthAsync(_sortedSetKey);
+        }
+
+        /// <summary>
         /// Dequeue async
         /// </summary>
-        /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async Task<HttpJob> DequeueAsync(CancellationToken cancellationToken)
+        public async Task<HttpJob> DequeueAsync()
         {
             var now = (double)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
             var val = await _database.SortedSetRangeByScoreAsync(_sortedSetKey, 0, now, Exclude.None, Order.Ascending, 0, 1).ConfigureAwait(false);

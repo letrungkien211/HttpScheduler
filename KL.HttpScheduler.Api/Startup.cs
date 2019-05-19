@@ -7,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
+using Swashbuckle.AspNetCore.Examples;
 using Swashbuckle.AspNetCore.Swagger;
 using System;
 using System.IO;
@@ -16,18 +17,31 @@ using System.Threading.Tasks;
 
 namespace KL.HttpScheduler.Api
 {
+    /// <summary>
+    /// Start up
+    /// </summary>
     public class Startup
     {
         private Config Config { get; set; }
         private ILogger<Startup> Logger { get; }
+
+        /// <summary>
+        /// Instructor
+        /// </summary>
+        /// <param name="configuration"></param>
+        /// <param name="logger"></param>
         public Startup(IConfiguration configuration, ILogger<Startup> logger)
         {
             Configuration = configuration;
             Logger = logger;
         }
 
-        public IConfiguration Configuration { get; }
+        private IConfiguration Configuration { get; }
 
+        /// <summary>
+        /// Configure services
+        /// </summary>
+        /// <param name="services"></param>
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
@@ -58,6 +72,7 @@ namespace KL.HttpScheduler.Api
             {
                 c.SwaggerDoc("v1", new Info { Title = "Http Jobs Scheduler", Version = "v1" });
                 c.DocumentFilter<BasePathDocumentFilter>(Config.SwaggerBasePath);
+                c.OperationFilter<ExamplesOperationFilter>();
 
                 var xmlFiles = new[] {
                     $"{Assembly.GetExecutingAssembly().GetName().Name}.xml",
@@ -83,7 +98,12 @@ namespace KL.HttpScheduler.Api
             Logger.LogInformation("ConfigureServices ends");
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+        /// <summary>
+        /// Configure 
+        /// </summary>
+        /// <param name="app"></param>
+        /// <param name="env"></param>
+        /// <param name="applicationLifetime"></param>
         public void Configure(
             IApplicationBuilder app, 
             IHostingEnvironment env, 

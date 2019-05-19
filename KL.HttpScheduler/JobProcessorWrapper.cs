@@ -15,6 +15,11 @@ namespace KL.HttpScheduler
         private TelemetryClient TelemetryClient { get; }
         private TimeSpan DefaultTimeout { get; } = TimeSpan.FromSeconds(5);
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="jobProcessor"></param>
+        /// <param name="telemetryClient"></param>
         public JobProcessorWrapper(IJobProcessor jobProcessor, TelemetryClient telemetryClient)
         {
             this.JobProcessor = jobProcessor;
@@ -25,7 +30,6 @@ namespace KL.HttpScheduler
         /// Process async
         /// </summary>
         /// <param name="httpJob"></param>
-        /// <param name="cancellationToken"></param>
         /// <returns></returns>
         public async Task ProcessAsync(HttpJob httpJob)
         {
@@ -41,8 +45,10 @@ namespace KL.HttpScheduler
             }
             catch (Exception ex)
             {
-                var telemetry = new ExceptionTelemetry(ex);
-                telemetry.ProblemId = "ExecuteFailure";
+                var telemetry = new ExceptionTelemetry(ex)
+                {
+                    ProblemId = "ExecuteFailure"
+                };
                 telemetry.Context.Session.Id = httpJob.Id;
                 this.TelemetryClient.TrackException(telemetry);
             }

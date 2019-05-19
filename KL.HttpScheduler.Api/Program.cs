@@ -1,10 +1,13 @@
 ﻿using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
+using System.Runtime.CompilerServices;
+
+[assembly: InternalsVisibleTo("KL.HttpScheduler.Tests")]
 
 namespace KL.HttpScheduler.Api
 {
-    public class Program
+    internal class Program
     {
         public static void Main(string[] args)
         {

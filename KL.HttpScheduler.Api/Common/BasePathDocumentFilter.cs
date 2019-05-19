@@ -3,7 +3,7 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace KL.HttpScheduler.Api.Common
 {
-    public class BasePathDocumentFilter : IDocumentFilter
+    internal class BasePathDocumentFilter : IDocumentFilter
     {
         private string BasePath { get; }
         public BasePathDocumentFilter(string basePath)
