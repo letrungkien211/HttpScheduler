@@ -1,5 +1,6 @@
 ﻿using KL.HttpScheduler.Api.Common;
 using Microsoft.ApplicationInsights;
+using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -140,6 +141,8 @@ namespace KL.HttpScheduler.Api
                 {
                     Logger.LogError("Shutdown incorrectly");
                 }
+                TelemetryConfiguration.Active.TelemetryChannel.Flush();
+                Thread.Sleep(2000);
             });
 
             if (env.IsDevelopment())
@@ -160,6 +163,7 @@ namespace KL.HttpScheduler.Api
             app.UseMvc();
 
             Logger.LogInformation("Configure ends");
+            TelemetryConfiguration.Active.TelemetryChannel.Flush();
         }
     }
 }
