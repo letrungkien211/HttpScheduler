@@ -60,7 +60,7 @@ namespace KL.HttpScheduler
                 if (await _database.HashExistsAsync(_hashKey, queueItem.Id).ConfigureAwait(false))
                 {
                     ret.Add((false, new ArgumentException(
-                        $"Job with id={queueItem.Id} already exists!", 
+                        $"Job with id={queueItem.Id} already exists!",
                         nameof(queueItem.Id)
                         )));
                     continue;
@@ -152,12 +152,12 @@ namespace KL.HttpScheduler
 
             try
             {
-                if (!await _database.SortedSetRemoveAsync(_sortedSetKey, val[0]).ConfigureAwait(false))
+                if (!await _database.SortedSetRemoveAsync(_sortedSetKey, val[0]).ConfigureAwait(false)
+                    || !await _database.HashDeleteAsync(_hashKey, message.Id).ConfigureAwait(false)
+                    )
                 {
                     return null;
                 }
-
-                await _database.HashDeleteAsync(_hashKey, message.Id).ConfigureAwait(false);
 
                 return message;
             }
