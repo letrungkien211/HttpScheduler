@@ -111,6 +111,10 @@ namespace KL.HttpScheduler.Api
             IApplicationLifetime applicationLifetime
             )
         {
+            var telemetryConfig = app.ApplicationServices.GetService<TelemetryConfiguration>();
+            telemetryConfig.TelemetryProcessorChainBuilder.Use(next => new ApplicationInsightsFilter(next));
+            telemetryConfig.TelemetryProcessorChainBuilder.Build();
+
             if (!app.ApplicationServices.GetService<IDatabase>().IsConnected(""))
             {
                 throw new TypeLoadException($"Redis server is not ready. Host={Config.RedisConnectionString}");
