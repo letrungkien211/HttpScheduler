@@ -90,15 +90,12 @@ namespace KL.HttpScheduler.Api
 
             var actionBlock = app.ApplicationServices.GetService<MyActionBlock>();
 
-            applicationLifetime.ApplicationStarted.Register(() =>
+            Task.Run(async () =>
             {
-                Task.Run(async () =>
-                {
-                    await schedulerRunner.RunAsync(applicationLifetime.ApplicationStopped).ConfigureAwait(false);
-                    await actionBlock.CompleteAsync().ConfigureAwait(false);
-                    manualEvent.Set();
-                    Logger.LogInformation("Background stopped");
-                });
+                await schedulerRunner.RunAsync(applicationLifetime.ApplicationStopped).ConfigureAwait(false);
+                await actionBlock.CompleteAsync().ConfigureAwait(false);
+                manualEvent.Set();
+                Logger.LogInformation("Background stopped");
             });
 
             applicationLifetime.ApplicationStopped.Register(() =>
