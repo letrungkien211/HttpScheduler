@@ -1,29 +1,39 @@
 ﻿using KL.HttpScheduler.Api.Common;
 using Microsoft.AspNetCore.Mvc;
+using Swashbuckle.AspNetCore.Examples;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace KL.HttpScheduler.Api.Controllers
 {
+    /// <summary>
+    /// Jobs scheduler
+    /// </summary>
     [Route("api/[controller]")]
     [ApiController]
     public class JobsController : ControllerBase
     {
         private readonly SortedSetScheduleClient sortedSetScheduleClient;
+        /// <summary>
+        /// Instructor
+        /// </summary>
+        /// <param name="sortedSetScheduleClient"></param>
         public JobsController(SortedSetScheduleClient sortedSetScheduleClient)
         {
             this.sortedSetScheduleClient = sortedSetScheduleClient;
         }
 
+        /// <summary>
+        /// Schedule a http job
+        /// </summary>
+        /// <param name="httpJob">Http Job</param>
+        /// <returns></returns>
         [HttpPost("")]
-        public async Task<IActionResult> Schedule(
-            [FromBody]HttpJob httpJob,
-            CancellationToken cancellationToken)
+        [SwaggerRequestExample(typeof(HttpJob), typeof(HttpJobExample))]
+        public async Task<IActionResult> Schedule([FromBody]HttpJob httpJob)
         {
-            var (success, ex) = (await sortedSetScheduleClient.ScheduleAsync(new[] { httpJob }, cancellationToken)).First();
+            var (success, ex) = (await sortedSetScheduleClient.ScheduleAsync(new[] { httpJob })).First();
             if (success)
             {
                 return Ok();
@@ -34,6 +44,11 @@ namespace KL.HttpScheduler.Api.Controllers
             }
         }
 
+        /// <summary>
+        /// Cancel a http job by id
+        /// </summary>
+        /// <param name="id">httpjob id</param>
+        /// <returns></returns>
         [HttpDelete("{id}")]
         public async Task<IActionResult> Cancel(string id)
         {
@@ -48,12 +63,11 @@ namespace KL.HttpScheduler.Api.Controllers
             }
         }
 
-        [HttpPost("[action]")]
-        public IActionResult Execute([FromBody]HttpJob httpJob, [FromServices]MyActionBlock actionBlock)
-        {
-            return actionBlock.Post(httpJob) ? Ok() : (IActionResult)StatusCode((int)HttpStatusCode.ServiceUnavailable, "Queue is full");
-        }
-
+        /// <summary>
+        /// Get an oustanding http job by id
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(string id)
         {
@@ -61,18 +75,35 @@ namespace KL.HttpScheduler.Api.Controllers
             return ret != null ? new JsonResult(ret) : (IActionResult)NotFound();
         }
 
+        /// <summary>
+        /// Get all oustanding http jobs
+        /// </summary>
+        /// <returns></returns>
         [HttpGet("")]
         public async Task<IEnumerable<HttpJob>> GetAll()
         {
             return await sortedSetScheduleClient.ListAsync();
         }
 
-        [HttpPost("Batch")]
-        public async Task<BatchOutput> ScheduleBatch(
-                [FromBody]BatchInput batchInput,
-                CancellationToken cancellationToken)
+        /// <summary>
+        /// Get number of outstanding http jobs
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("Count")]
+        public Task<long> Count()
         {
-            var rets = await sortedSetScheduleClient.ScheduleAsync(batchInput.Jobs, cancellationToken);
+            return sortedSetScheduleClient.CountAsync();
+        }
+
+        /// <summary>
+        /// Schedule batch
+        /// </summary>
+        /// <param name="batchInput"></param>
+        /// <returns></returns>
+        [HttpPost("Batch")]
+        public async Task<BatchOutput> ScheduleBatch([FromBody]BatchInput batchInput)
+        {
+            var rets = await sortedSetScheduleClient.ScheduleAsync(batchInput.Jobs);
             return new BatchOutput()
             {
                 Results = rets.Select(x => new ScheduleStatus()

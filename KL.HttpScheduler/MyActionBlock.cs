@@ -1,5 +1,4 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 
 namespace KL.HttpScheduler
@@ -14,11 +13,8 @@ namespace KL.HttpScheduler
         /// <summary>
         /// Action Block
         /// </summary>
-        /// <param name="forwardJobProcessor"></param>
         /// <param name="jobProcessorWrapper"></param>
-        public MyActionBlock(
-            JobProcessorWrapper jobProcessorWrapper
-            )
+        public MyActionBlock(JobProcessorWrapper jobProcessorWrapper)
         {
             ActionBlock = new ActionBlock<ActionBlockInput>((input) =>
             {
@@ -27,12 +23,21 @@ namespace KL.HttpScheduler
 
         }
 
+        /// <summary>
+        /// Complete this block
+        /// </summary>
+        /// <returns></returns>
         public Task CompleteAsync()
         {
             ActionBlock.Complete();
             return ActionBlock.Completion;
         }
 
+        /// <summary>
+        /// Enqueue the action
+        /// </summary>
+        /// <param name="httpJob"></param>
+        /// <returns></returns>
         public bool Post(HttpJob httpJob)
         {
             return ActionBlock.Post(new ActionBlockInput()

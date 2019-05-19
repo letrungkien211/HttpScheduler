@@ -1,18 +1,33 @@
-﻿using System;
-
-namespace KL.HttpScheduler
+﻿namespace KL.HttpScheduler.Api
 {
     /// <summary>
     /// Configuration
     /// </summary>
     public class Config
     {
+        /// <summary>
+        /// Redis connection string
+        /// </summary>
         public string RedisConnectionString { get; set; } = "localhost:6379, ssl=False,abortConnect=False";
+
+        /// <summary>
+        /// Hash key
+        /// </summary>
         public string HashKey { get; set; } = "hash";
+
+        /// <summary>
+        /// Sorted set key
+        /// </summary>
         public string SortedSetKey { get; set; } = "sortedset";
-        public bool EnableForward { get; set; } = false;
+
+        /// <summary>
+        /// Unit test
+        /// </summary>
         public bool UnitTest { get; set; } = false;
-        public Uri ForwardUri { get; set; } = new Uri("http://localhost:5000");
+
+        /// <summary>
+        /// Swagger base path
+        /// </summary>
         public string SwaggerBasePath { get; set; } = "/";
     }
 }

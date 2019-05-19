@@ -11,6 +11,11 @@ namespace KL.HttpScheduler
     public class JobProcessor : IJobProcessor
     {
         private IHttpClientFactory HttpClientFactory { get; }
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="httpClientFactory"></param>
         public JobProcessor(IHttpClientFactory httpClientFactory)
         {
             HttpClientFactory = httpClientFactory;

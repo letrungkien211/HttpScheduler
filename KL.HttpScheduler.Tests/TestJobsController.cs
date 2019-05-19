@@ -9,20 +9,17 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace KL.HttpScheduler.Api.Tests
 {
     public class TestJobsController : IClassFixture<WebApplicationFactory<Startup>>
     {
         private readonly WebApplicationFactory<Startup> _factory;
-        private readonly ITestOutputHelper _testOutputHelper;
 
-        public TestJobsController(WebApplicationFactory<Startup> factory, ITestOutputHelper testOutputHelper)
+        public TestJobsController(WebApplicationFactory<Startup> factory)
         {
             Environment.SetEnvironmentVariable("Config__UnitTest", "true");
             _factory = factory;
-            _testOutputHelper = testOutputHelper;
         }
 
         [Fact]
@@ -72,8 +69,10 @@ namespace KL.HttpScheduler.Api.Tests
         [InlineData("http://localhost:5000/")]
         public async Task TestOnlineScheduleLocalHost(string baseAddress)
         {
-            var client = new HttpClient();
-            client.BaseAddress = new Uri(baseAddress);
+            var client = new HttpClient
+            {
+                BaseAddress = new Uri(baseAddress)
+            };
 
             using (var cancelSource = new CancellationTokenSource(3000))
             {
@@ -113,8 +112,10 @@ namespace KL.HttpScheduler.Api.Tests
 
             for (var i = 0; i < 2; i++)
             {
-                var req = new HttpRequestMessage(HttpMethod.Post, "api/jobs");
-                req.Content = new StringContent(JsonConvert.SerializeObject(job), Encoding.UTF8, "application/json");
+                var req = new HttpRequestMessage(HttpMethod.Post, "api/jobs")
+                {
+                    Content = new StringContent(JsonConvert.SerializeObject(job), Encoding.UTF8, "application/json")
+                };
                 var res = await client.SendAsync(req);
 
                 if (i == 0)
