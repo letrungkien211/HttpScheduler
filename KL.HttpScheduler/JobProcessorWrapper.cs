@@ -14,13 +14,14 @@ namespace KL.HttpScheduler
     /// </summary>
     public class JobProcessorWrapper
     {
-        private readonly IJobProcessor jobProcessor;
-        private readonly TelemetryClient telemetryClient;
+        private IJobProcessor JobProcessor { get; }
+        private TelemetryClient TelemetryClient { get; }
+        private TimeSpan DefaultTimeout { get; } = TimeSpan.FromSeconds(5);
 
         public JobProcessorWrapper(IJobProcessor jobProcessor, TelemetryClient telemetryClient)
         {
-            this.jobProcessor = jobProcessor;
-            this.telemetryClient = telemetryClient;
+            this.JobProcessor = jobProcessor;
+            this.TelemetryClient = telemetryClient;
         }
 
         /// <summary>
@@ -33,20 +34,20 @@ namespace KL.HttpScheduler
         {
             try
             {
-                using (var cancellationSource = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
+                using (var cancellationSource = new CancellationTokenSource(DefaultTimeout))
                 {
-                    await this.jobProcessor.ProcessAsync(httpJob, cancellationSource.Token).ConfigureAwait(false);
+                    await this.JobProcessor.ProcessAsync(httpJob, cancellationSource.Token).ConfigureAwait(false);
                 }
-                var telemetry = new EventTelemetry("Execute");
-                telemetry.Properties["HttpJob"] = JsonConvert.SerializeObject(httpJob);
-                this.telemetryClient.TrackEvent(telemetry);
+                var telemetry = new EventTelemetry("ExecuteSuccess");
+                telemetry.Context.Session.Id = httpJob.Id;
+                this.TelemetryClient.TrackEvent(telemetry);
             }
             catch (Exception ex)
             {
                 var telemetry = new ExceptionTelemetry(ex);
-                telemetry.Properties["HttpJob"] = JsonConvert.SerializeObject(httpJob);
                 telemetry.ProblemId = "ExecuteFailure";
-                this.telemetryClient.TrackException(telemetry);
+                telemetry.Context.Session.Id = httpJob.Id;
+                this.TelemetryClient.TrackException(telemetry);
             }
         }
     }
