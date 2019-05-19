@@ -22,9 +22,10 @@ namespace KL.HttpScheduler.Api
                 {
                     builder.AddConsole();
                     builder.AddApplicationInsights(hostingContext.Configuration["ApplicationInsights:InstrumentationKey"] ?? "");
-                    builder.AddFilter<ApplicationInsightsLoggerProvider>(typeof(JobProcessorWrapper).FullName, LogLevel.Information);
-                    builder.AddFilter<ApplicationInsightsLoggerProvider>(typeof(SchedulerRunner).FullName, LogLevel.Information);
-                    builder.AddFilter<ApplicationInsightsLoggerProvider>(typeof(Startup).FullName, LogLevel.Information);
+                    builder.AddFilter<ApplicationInsightsLoggerProvider>((name, level) =>
+                    {
+                        return level >= LogLevel.Information && name.Contains(typeof(HttpJob).Namespace);
+                    });
                 })
                 .UseStartup<Startup>();
     }
