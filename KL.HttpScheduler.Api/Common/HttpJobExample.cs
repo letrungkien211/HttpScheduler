@@ -14,7 +14,9 @@ namespace KL.HttpScheduler.Api.Common
                 Headers = new Dictionary<string, string>(),
                 ScheduleDequeueTime = -1000,
                 Id = Guid.NewGuid().ToString(),
-                Uri = new Uri("https://github.com")
+                Uri = new Uri("https://github.com"),
+                ContentType = "",
+                HttpMethod = "GET"
             };
         }
     }
