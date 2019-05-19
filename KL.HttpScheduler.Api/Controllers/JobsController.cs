@@ -1,8 +1,10 @@
 ﻿using KL.HttpScheduler.Api.Common;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Examples;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 
 namespace KL.HttpScheduler.Api.Controllers
@@ -31,6 +33,7 @@ namespace KL.HttpScheduler.Api.Controllers
         /// <returns></returns>
         [HttpPost("")]
         [SwaggerRequestExample(typeof(HttpJob), typeof(HttpJobExample))]
+        [ProducesResponseType(typeof(Exception), (int)HttpStatusCode.BadRequest)]
         public async Task<IActionResult> Schedule([FromBody]HttpJob httpJob)
         {
             var (success, ex) = (await sortedSetScheduleClient.ScheduleAsync(new[] { httpJob })).First();
@@ -50,6 +53,7 @@ namespace KL.HttpScheduler.Api.Controllers
         /// <param name="id">httpjob id</param>
         /// <returns></returns>
         [HttpDelete("{id}")]
+        [ProducesResponseType(typeof(string), (int)HttpStatusCode.NotFound)]
         public async Task<IActionResult> Cancel(string id)
         {
             try
@@ -69,10 +73,11 @@ namespace KL.HttpScheduler.Api.Controllers
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpGet("{id}")]
+        [ProducesResponseType(typeof(string), (int)HttpStatusCode.NotFound)]
         public async Task<IActionResult> Get(string id)
         {
             var ret = await sortedSetScheduleClient.GetAsync(id);
-            return ret != null ? new JsonResult(ret) : (IActionResult)NotFound();
+            return ret != null ? new JsonResult(ret) : (IActionResult)NotFound($"Id={id} was not found!");
         }
 
         /// <summary>
