@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 using Swashbuckle.AspNetCore.Swagger;
 using System;
@@ -16,9 +17,11 @@ namespace KL.HttpScheduler.Api
     public class Startup
     {
         private Config Config { get; set; }
-        public Startup(IConfiguration configuration)
+        private ILogger<Startup> Logger { get; }
+        public Startup(IConfiguration configuration, ILogger<Startup> logger)
         {
             Configuration = configuration;
+            Logger = logger;
         }
 
         public IConfiguration Configuration { get; }
@@ -26,6 +29,7 @@ namespace KL.HttpScheduler.Api
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            Logger.LogInformation("ConfigureServices starts");
             Config = Configuration.GetSection("Config").Get<Config>() ?? new Config();
 
             services.AddHttpClient();
@@ -46,9 +50,6 @@ namespace KL.HttpScheduler.Api
             services.AddSingleton<MyActionBlock>();
 
             services.AddSingleton<SchedulerRunner>();
-            services.AddLogging(config =>
-            {
-            });
 
             // Register the Swagger generator, defining 1 or more Swagger documents
             services.AddSwaggerGen(c =>
@@ -67,15 +68,21 @@ namespace KL.HttpScheduler.Api
             {
                 services.AddSingleton<IJobProcessor, MockJobProcessor>();
             }
+            Logger.LogInformation("ConfigureServices ends");
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IApplicationLifetime applicationLifetime)
+        public void Configure(
+            IApplicationBuilder app, 
+            IHostingEnvironment env, 
+            IApplicationLifetime applicationLifetime
+            )
         {
             if (!app.ApplicationServices.GetService<IDatabase>().IsConnected(""))
             {
                 throw new TypeLoadException($"Redis server is not ready. Host={Config.RedisConnectionString}");
             }
+            Logger.LogInformation("Configure starts");
 
             app.ApplicationServices.GetService<SortedSetScheduleClient>();
             var schedulerRunner = app.ApplicationServices.GetService<SchedulerRunner>();
@@ -90,7 +97,7 @@ namespace KL.HttpScheduler.Api
                     await schedulerRunner.RunAsync(applicationLifetime.ApplicationStopped).ConfigureAwait(false);
                     await actionBlock.CompleteAsync().ConfigureAwait(false);
                     manualEvent.Set();
-                    Console.WriteLine("Background stopped");
+                    Logger.LogInformation("Background stopped");
                 });
             });
 
@@ -98,11 +105,11 @@ namespace KL.HttpScheduler.Api
             {
                 if (manualEvent.Wait(TimeSpan.FromSeconds(2)))
                 {
-                    Console.WriteLine("Gracefully shutdown");
+                    Logger.LogInformation("Gracefully shutdown");
                 }
                 else
                 {
-                    Console.Error.WriteLine("Shutdown incorrectly");
+                    Logger.LogError("Shutdown incorrectly");
                 }
             });
 
@@ -122,6 +129,8 @@ namespace KL.HttpScheduler.Api
             });
 
             app.UseMvc();
+
+            Logger.LogInformation("Configure ends");
         }
     }
 }
