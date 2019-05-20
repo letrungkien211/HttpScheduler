@@ -61,7 +61,7 @@ namespace KL.HttpScheduler.Api
                 return new SortedSetScheduleClient(provider.GetService<IDatabase>(), Config.SortedSetKey, Config.HashKey);
             });
 
-            services.AddSingleton<IJobProcessor, JobProcessor>();
+            services.AddSingleton<IJobProcessor, HttpJobProcessor>();
             services.AddSingleton<JobProcessorWrapper>();
             services.AddSingleton<TelemetryClient>();
             services.AddSingleton<MyActionBlock>();
