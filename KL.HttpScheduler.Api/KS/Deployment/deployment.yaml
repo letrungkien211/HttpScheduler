@@ -90,7 +90,7 @@ spec:
   - host: #{HOST}#
     http:
       paths:
-      - path: #{BASEPATH}#-alive
+      - path: /alive#{BASEPATH}#
         backend:
           serviceName: #{API_IMAGENAME}#
           servicePort: "http-port"
