@@ -79,7 +79,7 @@ namespace KL.HttpScheduler
                 }
                 catch
                 {
-                    // 
+                    // Ignore
                 }
             }
         }
