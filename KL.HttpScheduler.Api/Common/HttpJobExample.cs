@@ -12,7 +12,7 @@ namespace KL.HttpScheduler.Api.Common
             {
                 Body = "",
                 Headers = new Dictionary<string, string>(),
-                ScheduleDequeueTime = -1000,
+                ScheduleDequeueTime = -2000,
                 Id = Guid.NewGuid().ToString(),
                 Uri = new Uri("https://github.com"),
                 ContentType = "",

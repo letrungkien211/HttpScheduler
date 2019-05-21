@@ -1,4 +1,5 @@
 ﻿using KL.HttpScheduler.Api.Common;
+using KL.HttpScheduler.Api.Controllers;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.QuickPulse;
@@ -74,6 +75,8 @@ namespace KL.HttpScheduler.Api
                     Logger.LogInformation($"Application insights configuration is not available");
                 }
             });
+
+            services.AddSingleton<ApplicationInsightsConfig>(appInsightsConfig);
 
             services.AddSingleton<IDatabase>(_ =>
             {
@@ -199,6 +202,8 @@ namespace KL.HttpScheduler.Api
             {
                 c.SwaggerEndpoint("v1/swagger.json", "Http Jobs Scheduler");
             });
+
+            app.UseLogsApiAvailabilityMiddleware();
 
             app.UseMvc();
 

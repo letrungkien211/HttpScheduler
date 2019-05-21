@@ -21,6 +21,7 @@ namespace KL.HttpScheduler.Api
                 .ConfigureLogging((hostingContext, builder) =>
                 {
                     builder.AddConsole();
+                    builder.AddDebug();
                     builder.AddApplicationInsights(hostingContext.Configuration["ApplicationInsights:InstrumentationKey"] ?? "");
                     builder.AddFilter<ApplicationInsightsLoggerProvider>((name, level) =>
                     {
