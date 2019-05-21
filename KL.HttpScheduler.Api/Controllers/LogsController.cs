@@ -24,7 +24,8 @@ namespace KL.HttpScheduler.Api.Controllers
             HttpClientFactory = httpClientFactory;
         }
         /// <summary>
-        /// Get all logs related to this id
+        /// Get all logs related to this id. Logs index latency is about 5 minutes 
+        /// (so you need to wait up to 5 minutes after scheduling a job to see its log to appear)
         /// </summary>
         /// <param name="id"></param>
         /// <param name="hoursAgo"></param>
