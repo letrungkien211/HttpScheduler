@@ -40,23 +40,23 @@ spec:
           - name: ApplicationInsights__InstrumentationKey
             valueFrom:
               secretKeyRef:
-                key: #{NAMESPACE}#-secrets
-                name: applicationinsights-instrumentationkey
+                name: #{NAMESPACE}#-secrets
+                key: : applicationinsights-instrumentationkey
           - name: ApplicationInsights__ApplicationId
             valueFrom:
               secretKeyRef:
-                key: #{NAMESPACE}#-secrets
-                name: applicationinsights-applicationid
+                name: #{NAMESPACE}#-secrets
+                key: applicationinsights-applicationid
           - name: ApplicationInsights__ApiKey
             valueFrom:
               secretKeyRef:
-                key: #{NAMESPACE}#-secrets
-                name: applicationinsights-apikey
+                name: #{NAMESPACE}#-secrets
+                key: applicationinsights-apikey
           - name: Config__RedisConnectionString
             valueFrom:
               secretKeyRef:
-                key: #{NAMESPACE}#-secrets
-                name: config-redisconnectionstring
+                name: #{NAMESPACE}#-secrets
+                key: config-redisconnectionstring
         ports:
         - containerPort: 80
           name:  "http-port"
