@@ -22,7 +22,7 @@ namespace KL.HttpScheduler.Api.Controllers
 
         public async Task Invoke(HttpContext httpContext)
         {
-            if (httpContext.Request.Path.StartsWithSegments("/api/jobs") && !ApplicationInsightsConfig.IsValid())
+            if (httpContext.Request.Path.Value.StartsWith("/api/logs") && !ApplicationInsightsConfig.IsValid())
             {
                 httpContext.Response.StatusCode = (int)HttpStatusCode.NotImplemented;
                 await httpContext.Response.WriteAsync("Application Insights APIs are not configured.");
