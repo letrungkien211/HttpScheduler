@@ -30,7 +30,7 @@ namespace KL.HttpScheduler.Api.Controllers
         /// <summary>
         /// Schedule a http job
         /// </summary>
-        /// <param name="httpJob">Http Job</param>
+        /// <param name="httpJob">http job</param>
         /// <returns></returns>
         [HttpPost("")]
         [SwaggerRequestExample(typeof(HttpJob), typeof(HttpJobExample))]
@@ -59,7 +59,7 @@ namespace KL.HttpScheduler.Api.Controllers
         /// <summary>
         /// Cancel an outstanding http job by id. Will return Notfound for jobs that already complete.
         /// </summary>
-        /// <param name="id">httpjob id</param>
+        /// <param name="id">http job id</param>
         /// <returns></returns>
         [HttpDelete("{id}")]
         [ProducesResponseType(typeof(string), (int)HttpStatusCode.NotFound)]
@@ -80,7 +80,7 @@ namespace KL.HttpScheduler.Api.Controllers
         /// <summary>
         /// Get an outstanding http job by id
         /// </summary>
-        /// <param name="id"></param>
+        /// <param name="id">http job id</param>
         /// <returns></returns>
         [HttpGet("{id}")]
         [ProducesResponseType(typeof(string), (int)HttpStatusCode.NotFound)]
@@ -114,9 +114,9 @@ namespace KL.HttpScheduler.Api.Controllers
         }
 
         /// <summary>
-        /// Schedule batch
+        /// Schedule a batch of http jobs
         /// </summary>
-        /// <param name="batchInput"></param>
+        /// <param name="batchInput">batch of http jobs</param>
         /// <returns></returns>
         [HttpPost("[action]")]
         [ProducesResponseType(typeof(BatchOutput), (int)HttpStatusCode.OK)]
