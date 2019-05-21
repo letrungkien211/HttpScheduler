@@ -1,4 +1,18 @@
+# Define secret
+apiVersion: v1
+kind: Secret
+metadata:
+  namespace: #{NAMESPACE}#
+  name: #{NAMESPACE}#-secrets
+type: Opaque
+stringData:
+  applicationinsights-instrumentationkey: '#{InstrumentationKey}#'
+  applicationinsights-applicationid: '#{ApplicationInsightsApplicationId}#'
+  applicationinsights-apikey: '#{ApplicationInsightsApiKey}#'
+  config-redisconnectionstring: '#{RedisConnectionString}#'
+
 # Define the deployment
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -20,12 +34,28 @@ spec:
         env:
           - name: ASPNETCORE_ENVIRONMENT
             value: '#{ASPNETCORE_ENVIRONMENT}#'
-          - name: ApplicationInsights__InstrumentationKey
-            value: '#{InstrumentationKey}#'
-          - name: Config__RedisConnectionString
-            value: '#{RedisConnectionString}#'
           - name: Config__SwaggerBasePath
             value: '#{BASEPATH}#'
+          - name: ApplicationInsights__InstrumentationKey
+            valueFrom:
+              secretKeyRef:
+                name: #{NAMESPACE}#-secrets
+                key: applicationinsights-instrumentationkey
+          - name: ApplicationInsights__ApplicationId
+            valueFrom:
+              secretKeyRef:
+                name: #{NAMESPACE}#-secrets
+                key: applicationinsights-applicationid
+          - name: ApplicationInsights__ApiKey
+            valueFrom:
+              secretKeyRef:
+                name: #{NAMESPACE}#-secrets
+                key: applicationinsights-apikey
+          - name: Config__RedisConnectionString
+            valueFrom:
+              secretKeyRef:
+                name: #{NAMESPACE}#-secrets
+                key: config-redisconnectionstring
         ports:
         - containerPort: 80
           name:  "http-port"

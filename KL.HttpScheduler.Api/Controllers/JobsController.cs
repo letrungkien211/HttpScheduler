@@ -14,6 +14,7 @@ namespace KL.HttpScheduler.Api.Controllers
     /// </summary>
     [Route("api/[controller]")]
     [ApiController]
+    [Produces("application/json")]
     public class JobsController : ControllerBase
     {
         private readonly SortedSetScheduleClient sortedSetScheduleClient;
@@ -29,11 +30,13 @@ namespace KL.HttpScheduler.Api.Controllers
         /// <summary>
         /// Schedule a http job
         /// </summary>
-        /// <param name="httpJob">Http Job</param>
+        /// <param name="httpJob">http job</param>
         /// <returns></returns>
         [HttpPost("")]
         [SwaggerRequestExample(typeof(HttpJob), typeof(HttpJobExample))]
+        [ProducesResponseType(typeof(ConflictException), (int)HttpStatusCode.Conflict)]
         [ProducesResponseType(typeof(Exception), (int)HttpStatusCode.BadRequest)]
+        [ProducesResponseType(typeof(void), (int)HttpStatusCode.OK)]
         public async Task<IActionResult> Schedule([FromBody]HttpJob httpJob)
         {
             var (success, ex) = (await sortedSetScheduleClient.ScheduleAsync(new[] { httpJob })).First();
@@ -43,17 +46,24 @@ namespace KL.HttpScheduler.Api.Controllers
             }
             else
             {
-                return BadRequest(ex);
+                switch (ex)
+                {
+                    case ConflictException _:
+                        return StatusCode((int)HttpStatusCode.Conflict, ex);
+                    default:
+                        return BadRequest(ex);
+                }
             }
         }
 
         /// <summary>
-        /// Cancel a http job by id
+        /// Cancel an outstanding http job by id. Will return Notfound for jobs that already complete.
         /// </summary>
-        /// <param name="id">httpjob id</param>
+        /// <param name="id">http job id</param>
         /// <returns></returns>
         [HttpDelete("{id}")]
         [ProducesResponseType(typeof(string), (int)HttpStatusCode.NotFound)]
+        [ProducesResponseType(typeof(void), (int)HttpStatusCode.OK)]
         public async Task<IActionResult> Cancel(string id)
         {
             try
@@ -68,23 +78,25 @@ namespace KL.HttpScheduler.Api.Controllers
         }
 
         /// <summary>
-        /// Get an oustanding http job by id
+        /// Get an outstanding http job by id
         /// </summary>
-        /// <param name="id"></param>
+        /// <param name="id">http job id</param>
         /// <returns></returns>
         [HttpGet("{id}")]
         [ProducesResponseType(typeof(string), (int)HttpStatusCode.NotFound)]
+        [ProducesResponseType(typeof(HttpJob), (int)HttpStatusCode.OK)]
         public async Task<IActionResult> Get(string id)
         {
             var ret = await sortedSetScheduleClient.GetAsync(id);
-            return ret != null ? new JsonResult(ret) : (IActionResult)NotFound($"Id={id} was not found!");
+            return ret != null ? Ok(ret) : (IActionResult)NotFound($"Id={id} was not found!");
         }
 
         /// <summary>
-        /// Get all oustanding http jobs
+        /// Get all outstanding http jobs
         /// </summary>
         /// <returns></returns>
         [HttpGet("")]
+        [ProducesResponseType(typeof(IEnumerable<HttpJob>), (int)HttpStatusCode.OK)]
         public async Task<IEnumerable<HttpJob>> GetAll()
         {
             return await sortedSetScheduleClient.ListAsync();
@@ -94,21 +106,24 @@ namespace KL.HttpScheduler.Api.Controllers
         /// Get number of outstanding http jobs
         /// </summary>
         /// <returns></returns>
-        [HttpGet("Count")]
+        [HttpGet("[action]")]
+        [ProducesResponseType(typeof(long), (int)HttpStatusCode.OK)]
         public Task<long> Count()
         {
             return sortedSetScheduleClient.CountAsync();
         }
 
         /// <summary>
-        /// Schedule batch
+        /// Schedule a batch of http jobs
         /// </summary>
-        /// <param name="batchInput"></param>
+        /// <param name="batchInput">batch of http jobs</param>
         /// <returns></returns>
-        [HttpPost("Batch")]
-        public async Task<BatchOutput> ScheduleBatch([FromBody]BatchInput batchInput)
+        [HttpPost("[action]")]
+        [ProducesResponseType(typeof(BatchOutput), (int)HttpStatusCode.OK)]
+        public async Task<BatchOutput> Batch([FromBody]BatchInput batchInput)
         {
             var rets = await sortedSetScheduleClient.ScheduleAsync(batchInput.Jobs);
+
             return new BatchOutput()
             {
                 Results = rets.Select(x => new ScheduleStatus()

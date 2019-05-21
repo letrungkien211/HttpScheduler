@@ -1,6 +1,7 @@
 ﻿using KL.HttpScheduler.Api.Common;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.Extensibility;
+using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.QuickPulse;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -12,12 +13,22 @@ using Swashbuckle.AspNetCore.Examples;
 using Swashbuckle.AspNetCore.Swagger;
 using System;
 using System.IO;
+using System.Net.Http;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace KL.HttpScheduler.Api
 {
+    internal static class MyExtensions
+    {
+        public static string AppInsightsClientName = "AppInsights";
+        public static HttpClient CreateAppInsightsClient(this IHttpClientFactory httpClientFactory)
+        {
+            return httpClientFactory.CreateClient(AppInsightsClientName);
+        }
+    }
+
     /// <summary>
     /// Start up
     /// </summary>
@@ -48,8 +59,21 @@ namespace KL.HttpScheduler.Api
         {
             Logger.LogInformation("ConfigureServices starts");
             Config = Configuration.GetSection("Config").Get<Config>() ?? new Config();
+            var appInsightsConfig = Configuration.GetSection("ApplicationInsights").Get<ApplicationInsightsConfig>() ?? new ApplicationInsightsConfig();
 
             services.AddHttpClient();
+            services.AddHttpClient(MyExtensions.AppInsightsClientName, client =>
+            {
+                if (appInsightsConfig.IsValid())
+                {
+                    client.BaseAddress = new Uri($"https://api.applicationinsights.io/v1/apps/{appInsightsConfig.ApplicationId}/");
+                    client.DefaultRequestHeaders.Add("x-api-key", appInsightsConfig.ApiKey);
+                }
+                else
+                {
+                    Logger.LogInformation($"Application insights configuration is not available");
+                }
+            });
 
             services.AddSingleton<IDatabase>(_ =>
             {
@@ -58,13 +82,24 @@ namespace KL.HttpScheduler.Api
 
             services.AddSingleton<SortedSetScheduleClient>(provider =>
             {
-                return new SortedSetScheduleClient(provider.GetService<IDatabase>(), Config.SortedSetKey, Config.HashKey);
+                return new SortedSetScheduleClient(
+                    provider.GetService<IDatabase>(), 
+                    Config.SortedSetKey, Config.HashKey,
+                    provider.GetService<ILogger<SortedSetScheduleClient>>()
+                    );
             });
+
+            services.AddRouting(options => options.LowercaseUrls = true);
 
             services.AddSingleton<IJobProcessor, HttpJobProcessor>();
             services.AddSingleton<JobProcessorWrapper>();
             services.AddSingleton<TelemetryClient>();
             services.AddSingleton<MyActionBlock>();
+            services.ConfigureTelemetryModule<QuickPulseTelemetryModule>((module, o) =>
+            {
+                if (!string.IsNullOrEmpty(appInsightsConfig.ApiKey))
+                    module.AuthenticationApiKey = appInsightsConfig.ApiKey;
+            });
 
             services.AddSingleton<SchedulerRunner>();
 
@@ -79,7 +114,8 @@ namespace KL.HttpScheduler.Api
                     $"{Assembly.GetExecutingAssembly().GetName().Name}.xml",
                     $"{typeof(HttpJob).Assembly.GetName().Name}.xml"
                 };
-                foreach (var xmlFile in xmlFiles) {
+                foreach (var xmlFile in xmlFiles)
+                {
                     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
                     if (File.Exists(xmlPath))
                         c.IncludeXmlComments(xmlPath);
@@ -106,8 +142,8 @@ namespace KL.HttpScheduler.Api
         /// <param name="env"></param>
         /// <param name="applicationLifetime"></param>
         public void Configure(
-            IApplicationBuilder app, 
-            IHostingEnvironment env, 
+            IApplicationBuilder app,
+            IHostingEnvironment env,
             IApplicationLifetime applicationLifetime
             )
         {
