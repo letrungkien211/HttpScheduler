@@ -6,11 +6,10 @@ metadata:
   name: #{NAMESPACE}#-secrets
 type: Opaque
 stringData:
-  config.yaml: |-
-    applicationinsights-instrumentationkey: '#{InstrumentationKey}#'
-    applicationinsights-applicationid: '#{ApplicationInsightsApplicationId}#'
-    applicationinsights-apikey: '#{ApplicationInsightsApiKey}#'
-    config-redisconnectionstring: '#{RedisConnectionString}#'
+  applicationinsights-instrumentationkey: '#{InstrumentationKey}#'
+  applicationinsights-applicationid: '#{ApplicationInsightsApplicationId}#'
+  applicationinsights-apikey: '#{ApplicationInsightsApiKey}#'
+  config-redisconnectionstring: '#{RedisConnectionString}#'
 
 # Define the deployment
 ---
