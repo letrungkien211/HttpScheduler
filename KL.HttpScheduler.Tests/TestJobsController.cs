@@ -124,7 +124,7 @@ namespace KL.HttpScheduler.Api.Tests
                 }
                 else
                 {
-                    Assert.Equal(HttpStatusCode.BadRequest, res.StatusCode);
+                    Assert.Equal(HttpStatusCode.Conflict, res.StatusCode);
                 }
             }
 

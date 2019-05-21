@@ -89,6 +89,8 @@ namespace KL.HttpScheduler.Api
                     );
             });
 
+            services.AddRouting(options => options.LowercaseUrls = true);
+
             services.AddSingleton<IJobProcessor, HttpJobProcessor>();
             services.AddSingleton<JobProcessorWrapper>();
             services.AddSingleton<TelemetryClient>();
