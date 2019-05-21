@@ -68,7 +68,7 @@ namespace KL.HttpScheduler.Api.Controllers
         }
 
         /// <summary>
-        /// Get an oustanding http job by id
+        /// Get an outstanding http job by id
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
@@ -81,7 +81,7 @@ namespace KL.HttpScheduler.Api.Controllers
         }
 
         /// <summary>
-        /// Get all oustanding http jobs
+        /// Get all outstanding http jobs
         /// </summary>
         /// <returns></returns>
         [HttpGet("")]
