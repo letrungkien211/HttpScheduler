@@ -174,25 +174,25 @@ namespace KL.HttpScheduler
                 return null;
             }
 
-            var message = JsonConvert.DeserializeObject<HttpJob>(val[0]);
+            var httpJob = JsonConvert.DeserializeObject<HttpJob>(val[0]);
 
-            if (!await Database.LockTakeAsync($"{SortedSetKey}_{message.Id}", "Lock", TimeSpan.FromSeconds(5)).ConfigureAwait(false))
+            if (!await Database.LockTakeAsync($"{SortedSetKey}_{httpJob.Id}", "Lock", TimeSpan.FromSeconds(5)).ConfigureAwait(false))
                 return null;
 
             try
             {
                 if (!await Database.SortedSetRemoveAsync(SortedSetKey, val[0]).ConfigureAwait(false)
-                    || !await Database.HashDeleteAsync(HashKey, message.Id).ConfigureAwait(false)
+                    || !await Database.HashDeleteAsync(HashKey, httpJob.Id).ConfigureAwait(false)
                     )
                 {
                     return null;
                 }
-
-                return message;
+                httpJob.DequeuedTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                return httpJob;
             }
             finally
             {
-                await Database.LockReleaseAsync($"{SortedSetKey}_{message.Id}", "Lock").ConfigureAwait(false);
+                await Database.LockReleaseAsync($"{SortedSetKey}_{httpJob.Id}", "Lock").ConfigureAwait(false);
             }
         }
     }

@@ -46,7 +46,7 @@ namespace KL.HttpScheduler
                 {
                     httpJob = await SortedSetDequeueClient.DequeueAsync().ConfigureAwait(false);
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     Logger.LogError(ex, "DequeueException");
                 }
@@ -54,10 +54,10 @@ namespace KL.HttpScheduler
                 if (httpJob != null)
                 {
                     var success = ActionBlock.Post(httpJob);
-
                     using (Logger.BeginScope(new Dictionary<string, object>() {
                         {"id", httpJob.Id },
-                        {"httpJob", JsonConvert.SerializeObject(httpJob) }
+                        {"httpJob", JsonConvert.SerializeObject(httpJob) },
+                        {"dequeued_diff", httpJob.DequeuedTime - httpJob.ScheduleDequeueTime }
                     }))
                     {
                         if (success)
