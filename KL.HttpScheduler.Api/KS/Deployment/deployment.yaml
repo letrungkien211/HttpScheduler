@@ -1,4 +1,19 @@
+# Define secret
+apiVersion: v1
+kind: Secret
+metadata:
+  namespace: #{NAMESPACE}#
+  name: #{NAMESPACE}#-secrets
+type: Opaque
+stringData:
+  config.yaml: |-
+    applicationinsights-instrumentationkey: '#{InstrumentationKey}#'
+    applicationinsights-applicationid: '#{ApplicationInsightsApplicationId}#'
+    applicationinsights-apikey: '#{ApplicationInsightsApiKey}#'
+    config-redisconnectionstring: '#{RedisConnectionString}#'
+
 # Define the deployment
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -52,21 +67,6 @@ spec:
           initialDelaySeconds: 10
       imagePullSecrets:
         - name: '#{ACRNAME}#'
-
-# Define secret
----
-apiVersion: v1
-kind: Secret
-metadata:
-  namespace: #{NAMESPACE}#
-  name: #{NAMESPACE}#-secrets
-type: Opaque
-stringData:
-  config.yaml: |-
-    applicationinsights-instrumentationkey: '#{InstrumentationKey}#'
-    applicationinsights-applicationid: '#{ApplicationInsightsApplicationId}#'
-    applicationinsights-apikey: '#{ApplicationInsightsApiKey}#'
-    config-redisconnectionstring: '#{RedisConnectionString}#'
 
 # Define the service to forward to above deployment
 ---
