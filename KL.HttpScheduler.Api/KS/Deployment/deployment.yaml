@@ -41,7 +41,7 @@ spec:
             valueFrom:
               secretKeyRef:
                 name: #{NAMESPACE}#-secrets
-                key: : applicationinsights-instrumentationkey
+                key: applicationinsights-instrumentationkey
           - name: ApplicationInsights__ApplicationId
             valueFrom:
               secretKeyRef:
