@@ -8,7 +8,7 @@ namespace KL.HttpScheduler
     /// <summary>
     /// Job processor
     /// </summary>
-    public class JobProcessor : IJobProcessor
+    public class HttpJobProcessor : IJobProcessor
     {
         private IHttpClientFactory HttpClientFactory { get; }
 
@@ -16,7 +16,7 @@ namespace KL.HttpScheduler
         /// Constructor
         /// </summary>
         /// <param name="httpClientFactory"></param>
-        public JobProcessor(IHttpClientFactory httpClientFactory)
+        public HttpJobProcessor(IHttpClientFactory httpClientFactory)
         {
             HttpClientFactory = httpClientFactory;
         }
@@ -34,7 +34,11 @@ namespace KL.HttpScheduler
             var req = new HttpRequestMessage(new HttpMethod(httpJob.HttpMethod), httpJob.Uri);
 
             if (httpJob.Body != null)
-                req.Content = new StringContent(httpJob.Body, Encoding.UTF8, httpJob.ContentType);
+            {
+                req.Content = string.IsNullOrEmpty(httpJob.ContentType) ?
+                    new StringContent(httpJob.Body, Encoding.UTF8) :
+                    new StringContent(httpJob.Body, Encoding.UTF8, httpJob.ContentType);
+            }
 
             if (httpJob.Headers != null)
             {

@@ -89,7 +89,7 @@ namespace KL.HttpScheduler.Api
                     );
             });
 
-            services.AddSingleton<IJobProcessor, JobProcessor>();
+            services.AddSingleton<IJobProcessor, HttpJobProcessor>();
             services.AddSingleton<JobProcessorWrapper>();
             services.AddSingleton<TelemetryClient>();
             services.AddSingleton<MyActionBlock>();

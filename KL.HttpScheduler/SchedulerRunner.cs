@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -39,7 +40,17 @@ namespace KL.HttpScheduler
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                var httpJob = await SortedSetDequeueClient.DequeueAsync().ConfigureAwait(false);
+                HttpJob httpJob = null;
+
+                try
+                {
+                    httpJob = await SortedSetDequeueClient.DequeueAsync().ConfigureAwait(false);
+                }
+                catch(Exception ex)
+                {
+                    Logger.LogError(ex, "DequeueException");
+                }
+
                 if (httpJob != null)
                 {
                     var success = ActionBlock.Post(httpJob);
@@ -58,17 +69,17 @@ namespace KL.HttpScheduler
                             Logger.LogError($"Id={httpJob.Id}. Queue for local execution: Failed");
                         }
                     }
+
+                    continue;
                 }
-                else
+
+                try
                 {
-                    try
-                    {
-                        await Task.Delay(100, cancellationToken).ConfigureAwait(false);
-                    }
-                    catch
-                    {
-                        // 
-                    }
+                    await Task.Delay(100, cancellationToken).ConfigureAwait(false);
+                }
+                catch
+                {
+                    // Ignore
                 }
             }
         }
