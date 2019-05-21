@@ -32,14 +32,14 @@ namespace KL.HttpScheduler.Api.Tests
             {
                 var runner = scope.ServiceProvider.GetRequiredService<SchedulerRunner>();
                 var task = Task.Run(() => runner.RunAsync(cancelSource.Token));
-                var req = new HttpRequestMessage(HttpMethod.Post, "api/jobs/batch");
+                var req = new HttpRequestMessage(HttpMethod.Post, "api/jobs");
                 var job = new HttpJob()
                 {
                     Id = Guid.NewGuid().ToString("N"),
                     ScheduleDequeueTime = DateTimeOffset.UtcNow.AddSeconds(2).ToUnixTimeMilliseconds(),
                     Uri = new Uri("http://localhost/")
                 };
-                req.Content = new StringContent(JsonConvert.SerializeObject(new { Jobs = new List<HttpJob>() { job } }), Encoding.UTF8, "application/json");
+                req.Content = new StringContent(JsonConvert.SerializeObject(job), Encoding.UTF8, "application/json");
 
                 var res = await client.SendAsync(req);
                 Assert.Equal(HttpStatusCode.OK, res.StatusCode);
