@@ -13,7 +13,6 @@ namespace KL.HttpScheduler.Api.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Produces("application/json")]
-    [ProducesResponseType((int)HttpStatusCode.OK)]
     public class LogsController : ControllerBase
     {
         private IHttpClientFactory HttpClientFactory { get; }
@@ -34,6 +33,7 @@ namespace KL.HttpScheduler.Api.Controllers
         /// <param name="hoursAgo"></param>
         /// <returns></returns>
         [HttpGet("{id}")]
+        [ProducesResponseType((int)HttpStatusCode.OK)]
         public async Task<IActionResult> Get(string id, [FromQuery]int hoursAgo = 24)
         {
             var client = HttpClientFactory.CreateAppInsightsClient();
