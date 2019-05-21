@@ -20,12 +20,28 @@ spec:
         env:
           - name: ASPNETCORE_ENVIRONMENT
             value: '#{ASPNETCORE_ENVIRONMENT}#'
-          - name: ApplicationInsights__InstrumentationKey
-            value: '#{InstrumentationKey}#'
-          - name: Config__RedisConnectionString
-            value: '#{RedisConnectionString}#'
           - name: Config__SwaggerBasePath
             value: '#{BASEPATH}#'
+          - name: ApplicationInsights__InstrumentationKey
+            valueFrom:
+              secretKeyRef:
+                key: #{NAMESPACE}#-secrets
+                name: ApplicationInsights__InstrumentationKey
+          - name: ApplicationInsights__ApplicationId
+            valueFrom:
+              secretKeyRef:
+                key: #{NAMESPACE}#-secrets
+                name: ApplicationInsights__ApplicationId
+          - name: ApplicationInsights__ApiKey
+            valueFrom:
+              secretKeyRef:
+                key: #{NAMESPACE}#-secrets
+                name: ApplicationInsights__ApiKey
+          - name: Config__RedisConnectionString
+            valueFrom:
+              secretKeyRef:
+                key: #{NAMESPACE}#-secrets
+                name: Config__RedisConnectionString
         ports:
         - containerPort: 80
           name:  "http-port"
@@ -36,6 +52,21 @@ spec:
           initialDelaySeconds: 10
       imagePullSecrets:
         - name: '#{ACRNAME}#'
+
+# Define secret
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  namespace: #{NAMESPACE}#
+  name: #{NAMESPACE}#-secrets
+type: Opaque
+stringData:
+  config.yaml: |-
+    ApplicationInsights__InstrumentationKey: '#{InstrumentationKey}#'
+    ApplicationInsights__ApplicationId: '#{ApplicationInsightsApplicationId}#'
+    ApplicationInsights__ApiKey: '#{ApplicationInsightsApiKey}#'
+    Config__RedisConnectionString: '#{RedisConnectionString}#'
 
 # Define the service to forward to above deployment
 ---
