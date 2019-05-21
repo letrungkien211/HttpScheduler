@@ -26,22 +26,22 @@ spec:
             valueFrom:
               secretKeyRef:
                 key: #{NAMESPACE}#-secrets
-                name: ApplicationInsights__InstrumentationKey
+                name: applicationinsights-instrumentationkey
           - name: ApplicationInsights__ApplicationId
             valueFrom:
               secretKeyRef:
                 key: #{NAMESPACE}#-secrets
-                name: ApplicationInsights__ApplicationId
+                name: applicationinsights-applicationid
           - name: ApplicationInsights__ApiKey
             valueFrom:
               secretKeyRef:
                 key: #{NAMESPACE}#-secrets
-                name: ApplicationInsights__ApiKey
+                name: applicationinsights-apikey
           - name: Config__RedisConnectionString
             valueFrom:
               secretKeyRef:
                 key: #{NAMESPACE}#-secrets
-                name: Config__RedisConnectionString
+                name: config-redisconnectionstring
         ports:
         - containerPort: 80
           name:  "http-port"
@@ -63,10 +63,10 @@ metadata:
 type: Opaque
 stringData:
   config.yaml: |-
-    ApplicationInsights__InstrumentationKey: '#{InstrumentationKey}#'
-    ApplicationInsights__ApplicationId: '#{ApplicationInsightsApplicationId}#'
-    ApplicationInsights__ApiKey: '#{ApplicationInsightsApiKey}#'
-    Config__RedisConnectionString: '#{RedisConnectionString}#'
+    applicationinsights-instrumentationkey: '#{InstrumentationKey}#'
+    applicationinsights-applicationid: '#{ApplicationInsightsApplicationId}#'
+    applicationinsights-apikey: '#{ApplicationInsightsApiKey}#'
+    config-redisconnectionstring: '#{RedisConnectionString}#'
 
 # Define the service to forward to above deployment
 ---
