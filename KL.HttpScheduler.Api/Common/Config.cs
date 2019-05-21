@@ -1,4 +1,4 @@
-﻿namespace KL.HttpScheduler.Api
+﻿namespace KL.HttpScheduler.Api.Common
 {
     /// <summary>
     /// Configuration

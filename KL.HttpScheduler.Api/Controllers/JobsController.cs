@@ -109,6 +109,7 @@ namespace KL.HttpScheduler.Api.Controllers
         public async Task<BatchOutput> ScheduleBatch([FromBody]BatchInput batchInput)
         {
             var rets = await sortedSetScheduleClient.ScheduleAsync(batchInput.Jobs);
+
             return new BatchOutput()
             {
                 Results = rets.Select(x => new ScheduleStatus()
