@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,6 +12,8 @@ namespace KL.HttpScheduler.Api.Controllers
     /// </summary>
     [Route("api/[controller]")]
     [ApiController]
+    [Produces("application/json")]
+    [ProducesResponseType((int)HttpStatusCode.OK)]
     public class LogsController : ControllerBase
     {
         private IHttpClientFactory HttpClientFactory { get; }

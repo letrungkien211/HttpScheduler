@@ -9,6 +9,19 @@ using System.Threading.Tasks;
 namespace KL.HttpScheduler
 {
     /// <summary>
+    /// 
+    /// </summary>
+    public class ConflictException : Exception
+    {
+        /// <summary>
+        /// 
+        /// </summary>
+        public ConflictException(string message) : base(message)
+        {
+        }
+    }
+
+    /// <summary>
     /// Redis scheduler
     /// </summary>
     public class SortedSetScheduleClient
@@ -68,9 +81,8 @@ namespace KL.HttpScheduler
 
                 if (await Database.HashExistsAsync(HashKey, queueItem.Id).ConfigureAwait(false))
                 {
-                    rets.Add((false, new ArgumentException(
-                        $"Job with id={queueItem.Id} already exists!",
-                        nameof(queueItem.Id)
+                    rets.Add((false, new ConflictException(
+                        $"Job with id={queueItem.Id} already exists!"
                         )));
                     continue;
                 }
