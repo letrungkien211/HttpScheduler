@@ -29,8 +29,7 @@ namespace KL.HttpScheduler
         /// Actual dequeued time
         /// </summary>
         [JsonProperty("dequeueTime")]
-        [JsonRequired]
-        public long DequeuedTime { get; set; }
+        public long DequeuedTime { get; internal set; }
 
         /// <summary>
         /// Enqueued time. Set internally
