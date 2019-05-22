@@ -62,7 +62,7 @@ namespace KL.HttpScheduler.Api.Controllers
         /// <param name="id">http job id</param>
         /// <returns></returns>
         [HttpDelete("{id}")]
-        [ProducesResponseType(typeof(string), (int)HttpStatusCode.NotFound)]
+        [ProducesResponseType(typeof(KeyNotFoundException), (int)HttpStatusCode.NotFound)]
         [ProducesResponseType(typeof(void), (int)HttpStatusCode.OK)]
         public async Task<IActionResult> Cancel(string id)
         {
@@ -73,7 +73,7 @@ namespace KL.HttpScheduler.Api.Controllers
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(ex.Message);
+                return NotFound(ex);
             }
         }
 
@@ -83,12 +83,12 @@ namespace KL.HttpScheduler.Api.Controllers
         /// <param name="id">http job id</param>
         /// <returns></returns>
         [HttpGet("{id}")]
-        [ProducesResponseType(typeof(string), (int)HttpStatusCode.NotFound)]
+        [ProducesResponseType(typeof(KeyNotFoundException), (int)HttpStatusCode.NotFound)]
         [ProducesResponseType(typeof(HttpJob), (int)HttpStatusCode.OK)]
         public async Task<IActionResult> Get(string id)
         {
             var ret = await sortedSetScheduleClient.GetAsync(id);
-            return ret != null ? Ok(ret) : (IActionResult)NotFound($"Id={id} was not found!");
+            return ret != null ? Ok(ret) : (IActionResult)NotFound(new KeyNotFoundException($"Id={id} was not found!"));
         }
 
         /// <summary>
