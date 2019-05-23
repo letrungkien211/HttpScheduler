@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.ApplicationInsights;
+using Microsoft.ApplicationInsights.DataContracts;
 using Newtonsoft.Json;
 using StackExchange.Redis;
 using System;
@@ -9,19 +10,6 @@ using System.Threading.Tasks;
 namespace KL.HttpScheduler
 {
     /// <summary>
-    /// 
-    /// </summary>
-    public class ConflictException : Exception
-    {
-        /// <summary>
-        /// 
-        /// </summary>
-        public ConflictException(string message) : base(message)
-        {
-        }
-    }
-
-    /// <summary>
     /// Redis scheduler
     /// </summary>
     public class SortedSetScheduleClient
@@ -29,7 +17,7 @@ namespace KL.HttpScheduler
         private IDatabase Database { get; }
         private string SortedSetKey { get; }
         private string HashKey { get; }
-        private ILogger<SortedSetScheduleClient> Logger { get; }
+        private TelemetryClient Logger { get; }
 
         /// <summary>
         /// Redis scheduler
@@ -38,7 +26,7 @@ namespace KL.HttpScheduler
             IDatabase database,
             string sortedSetKey,
             string hashKey,
-            ILogger<SortedSetScheduleClient> logger
+            TelemetryClient logger
             )
         {
             Database = database;
@@ -105,20 +93,14 @@ namespace KL.HttpScheduler
             // Log here
             for (var i = 0; i < rets.Count; i++)
             {
-                using (Logger.BeginScope(new Dictionary<string, object>()
+
+                var telemetry = new TraceTelemetry(string.Format($"Id={jobList[i].Id}. Schedule: {0}", rets[i].Item1 ? "Success" : "Failure"))
                 {
-                    {"id", jobList[i].Id }
-                }))
-                {
-                    if (rets[i].Item1)
-                    {
-                        Logger.LogInformation($"Id={jobList[i].Id}. Schedule Sucess");
-                    }
-                    else
-                    {
-                        Logger.LogError(rets[i].Item2, "Id={jobList[i].Id}. Schedule Failure");
-                    }
-                }
+                    SeverityLevel = rets[i].Item1 ? SeverityLevel.Information : SeverityLevel.Error
+                };
+                telemetry.Context.Operation.Id = jobList[i].Id;
+                Logger.TrackTrace(telemetry);
+
             }
             return rets;
         }
