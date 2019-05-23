@@ -1,4 +1,6 @@
-﻿namespace KL.HttpScheduler.Api.Common
+﻿using System;
+
+namespace KL.HttpScheduler.Api.Common
 {
     /// <summary>
     /// Configuration
@@ -23,5 +25,10 @@
         /// Api key
         /// </summary>
         public string ApiKey { get; set; }
+
+        /// <summary>
+        /// Api Url
+        /// </summary>
+        public Uri ApiUrl { get; } = new Uri("https://api.applicationinsights.io/v1/apps/{appInsightsConfig.ApplicationId}/");
     }
 }

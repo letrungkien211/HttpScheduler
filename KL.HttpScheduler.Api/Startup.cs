@@ -63,7 +63,7 @@ namespace KL.HttpScheduler.Api
             {
                 if (appInsightsConfig.IsValid())
                 {
-                    client.BaseAddress = new Uri($"https://api.applicationinsights.io/v1/apps/{appInsightsConfig.ApplicationId}/");
+                    client.BaseAddress = appInsightsConfig.ApiUrl;
                     client.DefaultRequestHeaders.Add("x-api-key", appInsightsConfig.ApiKey);
                 }
             });
@@ -78,7 +78,7 @@ namespace KL.HttpScheduler.Api
             services.AddSingleton<SortedSetScheduleClient>(provider =>
             {
                 return new SortedSetScheduleClient(
-                    provider.GetService<IDatabase>(), 
+                    provider.GetService<IDatabase>(),
                     Config.SortedSetKey, Config.HashKey,
                     provider.GetService<ILogger<SortedSetScheduleClient>>()
                     );
