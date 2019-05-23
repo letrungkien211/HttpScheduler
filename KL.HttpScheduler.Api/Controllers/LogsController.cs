@@ -37,7 +37,7 @@ namespace KL.HttpScheduler.Api.Controllers
         public async Task<IActionResult> Get(string id, [FromQuery]int hoursAgo = 24)
         {
             var client = HttpClientFactory.CreateAppInsightsClient();
-            var query = $"traces | where timestamp > ago({hoursAgo}h) | where customDimensions.id=='{id}'| project timestamp , message ";
+            var query = $"traces | where timestamp > ago({hoursAgo}h) | where customDimensions.operation_Id=='{id}'| project timestamp , message ";
             var req = new HttpRequestMessage(HttpMethod.Post, "query")
             {
                 Content = new StringContent(JsonConvert.SerializeObject(new { query }), Encoding.UTF8, "application/json")
