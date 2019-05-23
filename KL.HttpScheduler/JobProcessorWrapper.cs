@@ -2,6 +2,7 @@
 using Microsoft.ApplicationInsights.DataContracts;
 using Newtonsoft.Json;
 using System;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -36,11 +37,12 @@ namespace KL.HttpScheduler
         {
             try
             {
+                HttpStatusCode statusCode;
                 using (var cancellationSource = new CancellationTokenSource(DefaultTimeout))
                 {
-                    await this.JobProcessor.ProcessAsync(httpJob, cancellationSource.Token).ConfigureAwait(false);
+                    statusCode = await this.JobProcessor.ProcessAsync(httpJob, cancellationSource.Token).ConfigureAwait(false);
                 }
-                var telemetry = new TraceTelemetry($"Id={httpJob.Id}. ExecuteSuccess");
+                var telemetry = new TraceTelemetry($"Id={httpJob.Id}. ExecuteSuccess. Return StatusCode={statusCode}");
                 telemetry.Context.Operation.Id = httpJob.Id;
                 telemetry.Properties["httpJob"] = JsonConvert.SerializeObject(httpJob);
                 Logger.TrackTrace(telemetry);

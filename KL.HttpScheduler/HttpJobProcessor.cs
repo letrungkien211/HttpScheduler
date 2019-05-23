@@ -1,4 +1,5 @@
-﻿using System.Net.Http;
+﻿using System.Net;
+using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -27,7 +28,7 @@ namespace KL.HttpScheduler
         /// <param name="httpJob"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public Task ProcessAsync(HttpJob httpJob, CancellationToken cancellationToken)
+        public async Task<HttpStatusCode> ProcessAsync(HttpJob httpJob, CancellationToken cancellationToken)
         {
             var client = HttpClientFactory.CreateClient();
 
@@ -48,7 +49,7 @@ namespace KL.HttpScheduler
                 }
             }
 
-            return client.SendAsync(req, cancellationToken);
+            return (await client.SendAsync(req, cancellationToken).ConfigureAwait(false)).StatusCode;
         }
     }
 }

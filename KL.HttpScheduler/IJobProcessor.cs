@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace KL.HttpScheduler
@@ -14,6 +15,6 @@ namespace KL.HttpScheduler
         /// <param name="httpJob"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        Task ProcessAsync(HttpJob httpJob, CancellationToken cancellationToken);
+        Task<HttpStatusCode> ProcessAsync(HttpJob httpJob, CancellationToken cancellationToken);
     }
 }

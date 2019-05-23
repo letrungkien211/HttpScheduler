@@ -94,7 +94,8 @@ namespace KL.HttpScheduler
             for (var i = 0; i < rets.Count; i++)
             {
 
-                var telemetry = new TraceTelemetry(string.Format($"Id={jobList[i].Id}. Schedule: {0}", rets[i].Item1 ? "Success" : "Failure"))
+                var str = rets[i].Item1 ? "Success" : "Failure";
+                var telemetry = new TraceTelemetry($"Id={jobList[i].Id}. Schedule: {str}")
                 {
                     SeverityLevel = rets[i].Item1 ? SeverityLevel.Information : SeverityLevel.Error
                 };
