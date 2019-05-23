@@ -54,6 +54,8 @@ namespace KL.HttpScheduler
 
                 if (httpJob != null)
                 {
+                    Logger.GetMetric("ScheduleDequeueLatency").TrackValue(httpJob.DequeuedTime - httpJob.EnqueuedTime);
+
                     var success = ActionBlock.Post(httpJob);
                     var str = success ? "Success" : "Failure";
                     var telemetry = new TraceTelemetry($"Id={httpJob.Id}. Queue for local execution: {str } ");
