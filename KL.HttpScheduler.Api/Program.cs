@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore;
+﻿using KL.HttpScheduler.Api.Common;
+using Microsoft.ApplicationInsights.Extensibility;
+using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.ApplicationInsights;
@@ -22,7 +24,6 @@ namespace KL.HttpScheduler.Api
                 {
                     builder.AddConsole();
                     builder.AddDebug();
-                    builder.AddApplicationInsights(hostingContext.Configuration["ApplicationInsights:InstrumentationKey"] ?? "");
                     builder.AddFilter<ApplicationInsightsLoggerProvider>((name, level) =>
                     {
                         return level >= LogLevel.Information && name.Contains(typeof(HttpJob).Namespace);

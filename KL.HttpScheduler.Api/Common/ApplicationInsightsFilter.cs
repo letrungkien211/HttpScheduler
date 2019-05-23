@@ -20,13 +20,18 @@ namespace KL.HttpScheduler.Api.Common
         /// <param name="item"></param>
         public void Process(ITelemetry item)
         {
-            if (item is RequestTelemetry request)
+            switch (item)
             {
-                if (request.Name == "GET Home/Index")
-                {
-                    return;
-                }
+                case RequestTelemetry request:
+                    if (request.Name == "GET Home/Index")
+                    {
+                        return;
+                    }
+                    break;
+                default:
+                    break;
             }
+
 
             Next.Process(item);
         }

@@ -36,17 +36,14 @@ namespace KL.HttpScheduler.Api
     public class Startup
     {
         private Config Config { get; set; }
-        private ILogger<Startup> Logger { get; }
 
         /// <summary>
         /// Instructor
         /// </summary>
         /// <param name="configuration"></param>
-        /// <param name="logger"></param>
-        public Startup(IConfiguration configuration, ILogger<Startup> logger)
+        public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
-            Logger = logger;
         }
 
         private IConfiguration Configuration { get; }
@@ -58,7 +55,6 @@ namespace KL.HttpScheduler.Api
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            Logger.LogInformation("ConfigureServices starts");
             Config = Configuration.GetSection("Config").Get<Config>() ?? new Config();
             var appInsightsConfig = Configuration.GetSection("ApplicationInsights").Get<ApplicationInsightsConfig>() ?? new ApplicationInsightsConfig();
 
@@ -67,12 +63,8 @@ namespace KL.HttpScheduler.Api
             {
                 if (appInsightsConfig.IsValid())
                 {
-                    client.BaseAddress = new Uri($"https://api.applicationinsights.io/v1/apps/{appInsightsConfig.ApplicationId}/");
+                    client.BaseAddress = appInsightsConfig.ApiUrl;
                     client.DefaultRequestHeaders.Add("x-api-key", appInsightsConfig.ApiKey);
-                }
-                else
-                {
-                    Logger.LogInformation($"Application insights configuration is not available");
                 }
             });
 
@@ -86,7 +78,7 @@ namespace KL.HttpScheduler.Api
             services.AddSingleton<SortedSetScheduleClient>(provider =>
             {
                 return new SortedSetScheduleClient(
-                    provider.GetService<IDatabase>(), 
+                    provider.GetService<IDatabase>(),
                     Config.SortedSetKey, Config.HashKey,
                     provider.GetService<ILogger<SortedSetScheduleClient>>()
                     );
@@ -98,6 +90,7 @@ namespace KL.HttpScheduler.Api
             services.AddSingleton<JobProcessorWrapper>();
             services.AddSingleton<TelemetryClient>();
             services.AddSingleton<MyActionBlock>();
+
             services.ConfigureTelemetryModule<QuickPulseTelemetryModule>((module, o) =>
             {
                 if (!string.IsNullOrEmpty(appInsightsConfig.ApiKey))
@@ -135,7 +128,6 @@ namespace KL.HttpScheduler.Api
             {
                 services.AddSingleton<IJobProcessor, MockJobProcessor>();
             }
-            Logger.LogInformation("ConfigureServices ends");
         }
 
         /// <summary>
@@ -147,7 +139,8 @@ namespace KL.HttpScheduler.Api
         public void Configure(
             IApplicationBuilder app,
             IHostingEnvironment env,
-            IApplicationLifetime applicationLifetime
+            IApplicationLifetime applicationLifetime,
+            ILogger<Startup> logger
             )
         {
             var telemetryConfig = app.ApplicationServices.GetService<TelemetryConfiguration>();
@@ -158,7 +151,7 @@ namespace KL.HttpScheduler.Api
             {
                 throw new TypeLoadException($"Redis server is not ready. Host={Config.RedisConnectionString}");
             }
-            Logger.LogInformation("Configure starts");
+            logger.LogInformation("Configure starts");
 
             app.ApplicationServices.GetService<SortedSetScheduleClient>();
             var schedulerRunner = app.ApplicationServices.GetService<SchedulerRunner>();
@@ -171,20 +164,20 @@ namespace KL.HttpScheduler.Api
                 await schedulerRunner.RunAsync(applicationLifetime.ApplicationStopped).ConfigureAwait(false);
                 await actionBlock.CompleteAsync().ConfigureAwait(false);
                 manualEvent.Set();
-                Logger.LogInformation("Background stopped");
+                logger.LogInformation("Background stopped");
             });
 
             applicationLifetime.ApplicationStopped.Register(() =>
             {
                 if (manualEvent.Wait(TimeSpan.FromSeconds(2)))
                 {
-                    Logger.LogInformation("Gracefully shutdown");
+                    logger.LogInformation("Gracefully shutdown");
                 }
                 else
                 {
-                    Logger.LogError("Shutdown incorrectly");
+                    logger.LogError("Shutdown incorrectly");
                 }
-                TelemetryConfiguration.Active.TelemetryChannel.Flush();
+                telemetryConfig.TelemetryChannel.Flush();
                 Thread.Sleep(2000);
             });
 
@@ -207,8 +200,8 @@ namespace KL.HttpScheduler.Api
 
             app.UseMvc();
 
-            Logger.LogInformation("Configure ends");
-            TelemetryConfiguration.Active.TelemetryChannel.Flush();
+            logger.LogInformation("Configure ends");
+            telemetryConfig.TelemetryChannel.Flush();
         }
     }
 }
