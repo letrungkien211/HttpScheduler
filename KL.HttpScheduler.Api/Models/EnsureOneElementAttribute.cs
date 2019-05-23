@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.ComponentModel.DataAnnotations;
 
-namespace KL.HttpScheduler.Api.Common
+namespace KL.HttpScheduler.Api.Models
 {
     internal class EnsureOneElementAttribute : ValidationAttribute
     {

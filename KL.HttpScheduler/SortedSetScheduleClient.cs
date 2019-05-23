@@ -141,9 +141,9 @@ namespace KL.HttpScheduler
         /// List async
         /// </summary>
         /// <returns></returns>
-        public async Task<IEnumerable<HttpJob>> ListAsync()
+        public async Task<IEnumerable<HttpJob>> ListAsync(int start = 0, int count = 1000)
         {
-            return (await Database.SortedSetRangeByRankAsync(SortedSetKey).ConfigureAwait(false)).Select(x => JsonConvert.DeserializeObject<HttpJob>(x));
+            return (await Database.SortedSetRangeByRankAsync(SortedSetKey, start: start, stop: start + count - 1).ConfigureAwait(false)).Select(x => JsonConvert.DeserializeObject<HttpJob>(x));
         }
 
         /// <summary>

@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 
@@ -29,12 +30,14 @@ namespace KL.HttpScheduler
         /// Actual dequeued time. Use internally. Do not set this value via API (will be ignored).
         /// </summary>
         [JsonProperty("dequeuedTime")]
+        [BindNever]
         internal long? DequeuedTime { get; set; }
 
         /// <summary>
         /// Enqueued time. Use internally. Do not set this value via API (will be ignored).
         /// </summary>
         [JsonProperty("enqueuedTime")]
+        [BindNever]
         internal long? EnqueuedTime { get; set; }
 
         /// <summary>

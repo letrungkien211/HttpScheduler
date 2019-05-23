@@ -5,7 +5,6 @@ namespace KL.HttpScheduler
     /// <summary>
     /// Conflict exception
     /// </summary>
-    [Serializable]
     public class ConflictException : Exception
     {
         /// <summary>
