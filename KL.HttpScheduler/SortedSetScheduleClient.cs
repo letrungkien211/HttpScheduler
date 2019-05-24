@@ -93,15 +93,14 @@ namespace KL.HttpScheduler
             // Log here
             for (var i = 0; i < rets.Count; i++)
             {
-
                 var str = rets[i].Item1 ? "Success" : "Failure";
-                var telemetry = new TraceTelemetry($"Id={jobList[i].Id}. Schedule: {str}")
+                var telemetry = new TraceTelemetry($"Id={jobList[i].Id}. Schedule: {str}. Ex: {rets[i].Item2}")
                 {
                     SeverityLevel = rets[i].Item1 ? SeverityLevel.Information : SeverityLevel.Error
                 };
+                telemetry.Properties["httpJob"] = JsonConvert.SerializeObject(jobList[i]);
                 telemetry.Context.Operation.Id = jobList[i].Id;
                 Logger.TrackTrace(telemetry);
-
             }
             return rets;
         }
