@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading;
@@ -30,6 +31,10 @@ namespace KL.HttpScheduler
         /// <returns></returns>
         public async Task<HttpStatusCode> ProcessAsync(HttpJob httpJob, CancellationToken cancellationToken)
         {
+            // Set the connection timeout
+            var serviceEndpoint = ServicePointManager.FindServicePoint(httpJob.Uri);
+            serviceEndpoint.ConnectionLeaseTimeout = (int)TimeSpan.FromSeconds(60).TotalMilliseconds;
+
             var client = HttpClientFactory.CreateClient();
 
             var req = new HttpRequestMessage(new HttpMethod(httpJob.HttpMethod), httpJob.Uri);
