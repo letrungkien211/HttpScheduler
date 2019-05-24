@@ -61,7 +61,7 @@ namespace KL.HttpScheduler
                 var redisValue = (RedisValue)JsonConvert.SerializeObject(queueItem);
 
                 // Cannot schedule past job. 100ms to compensate time different among servers.
-                if (queueItem.ScheduleDequeueTime < now - 100)
+                if (queueItem.ScheduleDequeueTime < now - 5000)
                 {
                     success = false;
                     ex = new ArgumentException(
