@@ -59,7 +59,7 @@ namespace KL.HttpScheduler
 
                 var redisValue = (RedisValue)JsonConvert.SerializeObject(queueItem);
 
-                if (queueItem.ScheduleDequeueTime < now)
+                if (queueItem.ScheduleDequeueTime < now- 5000)
                 {
                     rets.Add((false, new ArgumentException(
                         $"Cannot schedule item in the past!. Now={now}, ScheduleDequeueTime={queueItem.ScheduleDequeueTime}, JobMessage={JsonConvert.SerializeObject(queueItem)}",
