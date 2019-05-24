@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -21,10 +22,10 @@ namespace KL.HttpScheduler
         /// <param name="httpJob"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public Task ProcessAsync(HttpJob httpJob, CancellationToken cancellationToken)
+        public Task<HttpStatusCode> ProcessAsync(HttpJob httpJob, CancellationToken cancellationToken)
         {
             Dict[httpJob.Id] = httpJob;
-            return Task.FromResult(0);
+            return Task.FromResult(HttpStatusCode.OK);
         }
 
         /// <summary>

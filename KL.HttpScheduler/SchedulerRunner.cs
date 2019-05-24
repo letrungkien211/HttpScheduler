@@ -1,7 +1,7 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.ApplicationInsights;
+using Microsoft.ApplicationInsights.DataContracts;
 using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -14,7 +14,8 @@ namespace KL.HttpScheduler
     {
         private SortedSetScheduleClient SortedSetDequeueClient { get; }
         private MyActionBlock ActionBlock { get; }
-        private ILogger<SchedulerRunner> Logger { get; }
+        private TelemetryClient Logger { get; }
+
         /// <summary>
         /// Constructor
         /// </summary>
@@ -24,7 +25,7 @@ namespace KL.HttpScheduler
         public SchedulerRunner(
             SortedSetScheduleClient sortedSetDequeueClient,
             MyActionBlock actionBlock,
-            ILogger<SchedulerRunner> logger
+            TelemetryClient logger
             )
         {
             SortedSetDequeueClient = sortedSetDequeueClient;
@@ -48,28 +49,19 @@ namespace KL.HttpScheduler
                 }
                 catch (Exception ex)
                 {
-                    Logger.LogError(ex, "DequeueException");
+                    Logger.TrackException(ex);
                 }
 
                 if (httpJob != null)
                 {
-                    var success = ActionBlock.Post(httpJob);
-                    using (Logger.BeginScope(new Dictionary<string, object>() {
-                        {"id", httpJob.Id },
-                        {"httpJob", JsonConvert.SerializeObject(httpJob) },
-                        {"dequeued_diff", httpJob.DequeuedTime - httpJob.ScheduleDequeueTime }
-                    }))
-                    {
-                        if (success)
-                        {
-                            Logger.LogInformation($"Id={httpJob.Id}. Queue for local execution: Success");
-                        }
-                        else
-                        {
-                            Logger.LogError($"Id={httpJob.Id}. Queue for local execution: Failed");
-                        }
-                    }
+                    Logger.GetMetric("ScheduleDequeueLatency").TrackValue(httpJob.DequeuedTime - httpJob.EnqueuedTime);
 
+                    var success = ActionBlock.Post(httpJob);
+                    var str = success ? "Success" : "Failure";
+                    var telemetry = new TraceTelemetry($"Id={httpJob.Id}. Queue for local execution: {str } ");
+                    telemetry.Context.Operation.Id = httpJob.Id;
+                    telemetry.Properties["httpJob"] = JsonConvert.SerializeObject(httpJob);
+                    Logger.TrackTrace(telemetry);
                     continue;
                 }
 

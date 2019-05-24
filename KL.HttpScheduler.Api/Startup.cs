@@ -80,7 +80,7 @@ namespace KL.HttpScheduler.Api
                 return new SortedSetScheduleClient(
                     provider.GetService<IDatabase>(),
                     Config.SortedSetKey, Config.HashKey,
-                    provider.GetService<ILogger<SortedSetScheduleClient>>()
+                    provider.GetService<TelemetryClient>()
                     );
             });
 
@@ -136,6 +136,7 @@ namespace KL.HttpScheduler.Api
         /// <param name="app"></param>
         /// <param name="env"></param>
         /// <param name="applicationLifetime"></param>
+        /// <param name="logger"></param>
         public void Configure(
             IApplicationBuilder app,
             IHostingEnvironment env,

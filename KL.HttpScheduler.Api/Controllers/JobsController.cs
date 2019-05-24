@@ -1,8 +1,11 @@
 ﻿using KL.HttpScheduler.Api.Common;
+using KL.HttpScheduler.Api.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Swashbuckle.AspNetCore.Examples;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
@@ -97,9 +100,9 @@ namespace KL.HttpScheduler.Api.Controllers
         /// <returns></returns>
         [HttpGet("")]
         [ProducesResponseType(typeof(IEnumerable<HttpJob>), (int)HttpStatusCode.OK)]
-        public async Task<IEnumerable<HttpJob>> GetAll()
+        public Task<IEnumerable<HttpJob>> GetAll([FromQuery]GetAllParameters parameters)
         {
-            return await sortedSetScheduleClient.ListAsync();
+            return sortedSetScheduleClient.ListAsync(parameters.Start, parameters.Count);
         }
 
         /// <summary>

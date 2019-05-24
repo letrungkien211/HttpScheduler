@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace KL.HttpScheduler.Api.Common
+namespace KL.HttpScheduler.Api.Models
 {
     /// <summary>
     /// Schedule Input

@@ -1,6 +1,4 @@
-﻿using KL.HttpScheduler.Api.Common;
-using Microsoft.ApplicationInsights.Extensibility;
-using Microsoft.AspNetCore;
+﻿using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.ApplicationInsights;
