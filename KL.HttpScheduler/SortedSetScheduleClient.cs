@@ -40,14 +40,15 @@ namespace KL.HttpScheduler
         /// </summary>
         /// <param name="jobs"></param>
         /// <returns></returns>
-        public async Task<IEnumerable<(bool, Exception)>> ScheduleAsync(IEnumerable<HttpJob> jobs)
+        public async Task<(bool, Exception)> ScheduleAsync(IEnumerable<HttpJob> jobs)
         {
             var jobList = jobs.ToList();
 
             var idToJobs = new LinkedList<HashEntry>();
             var scheduleItems = new LinkedList<SortedSetEntry>();
             var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-            var rets = new List<(bool, Exception)>();
+            var success = true;
+            Exception ex = null;
             foreach (var _ in jobList)
             {
                 var queueItem = JsonConvert.DeserializeObject<HttpJob>(JsonConvert.SerializeObject(_));
@@ -59,23 +60,24 @@ namespace KL.HttpScheduler
 
                 var redisValue = (RedisValue)JsonConvert.SerializeObject(queueItem);
 
-                if (queueItem.ScheduleDequeueTime < now- 5000)
+                // Cannot schedule past job. 100ms to compensate time different among servers.
+                if (queueItem.ScheduleDequeueTime < now - 100)
                 {
-                    rets.Add((false, new ArgumentException(
-                        $"Cannot schedule item in the past!. Now={now}, ScheduleDequeueTime={queueItem.ScheduleDequeueTime}, JobMessage={JsonConvert.SerializeObject(queueItem)}",
-                        nameof(queueItem.ScheduleDequeueTime))));
-                    continue;
+                    success = false;
+                    ex = new ArgumentException(
+                        $"Id={queueItem.Id} Cannot schedule item in the past!. Now={now}, ScheduleDequeueTime={queueItem.ScheduleDequeueTime}, JobMessage={JsonConvert.SerializeObject(queueItem)}",
+                        nameof(queueItem.ScheduleDequeueTime));
+                    break;
                 }
 
                 if (await Database.HashExistsAsync(HashKey, queueItem.Id).ConfigureAwait(false))
                 {
-                    rets.Add((false, new ConflictException(
-                        $"Job with id={queueItem.Id} already exists!"
-                        )));
-                    continue;
+                    success = false;
+                    ex = new ConflictException(
+                        $"Id={queueItem.Id} already exists!"
+                        );
+                    break;
                 }
-
-                rets.Add((true, null));
 
                 idToJobs.AddLast(new HashEntry(queueItem.Id, redisValue));
 
@@ -90,19 +92,20 @@ namespace KL.HttpScheduler
                 await Database.SortedSetAddAsync(SortedSetKey, scheduleItems.ToArray()).ConfigureAwait(false);
             }
 
-            // Log here
-            for (var i = 0; i < rets.Count; i++)
+            var jobListJsonStr = JsonConvert.SerializeObject(jobList);
+            foreach (var job in jobList)
             {
-                var str = rets[i].Item1 ? "Success" : "Failure";
-                var telemetry = new TraceTelemetry($"Id={jobList[i].Id}. Schedule: {str}. Ex: {rets[i].Item2}")
+                var str = success ? "Success" : $"Failure. Ex={ex}";
+                var telemetry = new TraceTelemetry($"Id={job.Id}. Schedule: {str}.")
                 {
-                    SeverityLevel = rets[i].Item1 ? SeverityLevel.Information : SeverityLevel.Error
+                    SeverityLevel = success ? SeverityLevel.Information : SeverityLevel.Error
                 };
-                telemetry.Properties["httpJob"] = JsonConvert.SerializeObject(jobList[i]);
-                telemetry.Context.Operation.Id = jobList[i].Id;
+                telemetry.Properties["httpJob"] = JsonConvert.SerializeObject(job);
+                telemetry.Properties["httpJobs"] = jobListJsonStr;
+                telemetry.Context.Operation.Id = job.Id;
                 Logger.TrackTrace(telemetry);
             }
-            return rets;
+            return (success, ex);
         }
 
         /// <summary>

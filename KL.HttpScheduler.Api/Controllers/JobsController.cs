@@ -40,23 +40,12 @@ namespace KL.HttpScheduler.Api.Controllers
         [ProducesResponseType(typeof(ConflictException), (int)HttpStatusCode.Conflict)]
         [ProducesResponseType(typeof(Exception), (int)HttpStatusCode.BadRequest)]
         [ProducesResponseType(typeof(void), (int)HttpStatusCode.OK)]
-        public async Task<IActionResult> Schedule([FromBody]HttpJob httpJob)
+        public Task<IActionResult> Schedule([FromBody]HttpJob httpJob)
         {
-            var (success, ex) = (await sortedSetScheduleClient.ScheduleAsync(new[] { httpJob })).First();
-            if (success)
+            return Batch(new BatchInput()
             {
-                return Ok();
-            }
-            else
-            {
-                switch (ex)
-                {
-                    case ConflictException _:
-                        return StatusCode((int)HttpStatusCode.Conflict, ex);
-                    default:
-                        return BadRequest(ex);
-                }
-            }
+                Jobs = new List<HttpJob>() { httpJob }
+            });
         }
 
         /// <summary>
@@ -117,24 +106,32 @@ namespace KL.HttpScheduler.Api.Controllers
         }
 
         /// <summary>
-        /// Schedule a batch of http jobs
+        /// Schedule a batch of http jobs. All jobs will be dropped if one job is invalid.
         /// </summary>
         /// <param name="batchInput">batch of http jobs</param>
         /// <returns></returns>
         [HttpPost("[action]")]
-        [ProducesResponseType(typeof(BatchOutput), (int)HttpStatusCode.OK)]
-        public async Task<BatchOutput> Batch([FromBody]BatchInput batchInput)
+        [ProducesResponseType(typeof(ConflictException), (int)HttpStatusCode.Conflict)]
+        [ProducesResponseType(typeof(Exception), (int)HttpStatusCode.BadRequest)]
+        [ProducesResponseType(typeof(void), (int)HttpStatusCode.OK)]
+        public async Task<IActionResult> Batch([FromBody]BatchInput batchInput)
         {
-            var rets = await sortedSetScheduleClient.ScheduleAsync(batchInput.Jobs);
+            var (success, ex) = await sortedSetScheduleClient.ScheduleAsync(batchInput.Jobs);
 
-            return new BatchOutput()
+            if (success)
             {
-                Results = rets.Select(x => new ScheduleStatus()
+                return Ok();
+            }
+            else
+            {
+                switch (ex)
                 {
-                    Success = x.Item1,
-                    Exception = x.Item2
-                }).ToList()
-            };
+                    case ConflictException _:
+                        return StatusCode((int)HttpStatusCode.Conflict, ex);
+                    default:
+                        return BadRequest(ex);
+                }
+            }
         }
     }
 }
