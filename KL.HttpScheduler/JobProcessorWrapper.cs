@@ -53,6 +53,7 @@ namespace KL.HttpScheduler
                 telemetry.Context.Operation.Id = httpJob.Id;
                 telemetry.Properties["httpJob"] = JsonConvert.SerializeObject(httpJob);
                 telemetry.Message = $"Id={httpJob.Id}. ExecuteException";
+                Logger.TrackException(ex);
             }
         }
     }
