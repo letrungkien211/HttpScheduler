@@ -95,7 +95,7 @@ spec:
     spec:
       containers:
       - name: '#{RUNNER_IMAGENAME}#'
-        image: '#{ACRNAME}#.azurecr.io/#{RUNNER_IMAGENAME}#:#{Build.SourceBranchName}#-#{Build.BuildId}#'
+        image: '#{ACRNAME}#.azurecr.io/#{API_IMAGENAME}#:#{Build.SourceBranchName}#-#{Build.BuildId}#'
         env:
           - name: ASPNETCORE_ENVIRONMENT
             value: '#{ASPNETCORE_ENVIRONMENT}#'
