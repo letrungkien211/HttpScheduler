@@ -81,7 +81,7 @@ namespace KL.HttpScheduler
                 }
             }
 
-            var jobListJsonStr = JsonConvert.SerializeObject(jobList);
+            var commonBatchId = Guid.NewGuid().ToString();
             foreach (var job in jobList)
             {
                 var str = success ? "Success" : $"Failure. Ex={ex}";
@@ -90,7 +90,7 @@ namespace KL.HttpScheduler
                     SeverityLevel = success ? SeverityLevel.Information : SeverityLevel.Error
                 };
                 telemetry.Properties["httpJob"] = JsonConvert.SerializeObject(job);
-                telemetry.Properties["httpJobs"] = jobListJsonStr;
+                telemetry.Properties["batchId"] = commonBatchId;
                 telemetry.Context.Operation.Id = job.Id;
                 Logger.TrackTrace(telemetry);
             }
