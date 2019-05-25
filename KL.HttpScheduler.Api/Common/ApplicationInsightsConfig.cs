@@ -27,10 +27,9 @@ namespace KL.HttpScheduler.Api.Common
         /// </summary>
         public string ApiKey { get; set; }
 
-        [JsonIgnore]
         /// <summary>
         /// Api Url
         /// </summary>
-        public Uri ApiUrl => new Uri($"https://api.applicationinsights.io/v1/apps/{ApplicationId}/");
+        public Uri ApiUrl() => new Uri($"https://api.applicationinsights.io/v1/apps/{ApplicationId}/");
     }
 }

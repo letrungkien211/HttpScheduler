@@ -63,7 +63,7 @@ namespace KL.HttpScheduler.Api
             {
                 if (appInsightsConfig.IsValid())
                 {
-                    client.BaseAddress = appInsightsConfig.ApiUrl;
+                    client.BaseAddress = appInsightsConfig.ApiUrl();
                     client.DefaultRequestHeaders.Add("x-api-key", appInsightsConfig.ApiKey);
                 }
             });
