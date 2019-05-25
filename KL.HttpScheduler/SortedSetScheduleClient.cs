@@ -42,46 +42,46 @@ namespace KL.HttpScheduler
         /// <returns></returns>
         public async Task<(bool, Exception)> ScheduleAsync(IEnumerable<HttpJob> jobs)
         {
-            var jobList = jobs.ToList();
+            // Make a copy of original jobs
+            var jobList = jobs.Select(job => JsonConvert.DeserializeObject<HttpJob>(JsonConvert.SerializeObject(job))).ToList();
 
             var idToJobs = new LinkedList<HashEntry>();
             var scheduleItems = new LinkedList<SortedSetEntry>();
             var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
             var success = true;
             Exception ex = null;
-            foreach (var _ in jobList)
+            foreach (var job in jobList)
             {
-                var queueItem = JsonConvert.DeserializeObject<HttpJob>(JsonConvert.SerializeObject(_));
-                queueItem.EnqueuedTime = now;
-                if (queueItem.ScheduleDequeueTime < 0)
+                job.EnqueuedTime = now;
+                if (job.ScheduleDequeueTime < 0)
                 {
-                    queueItem.ScheduleDequeueTime = now - queueItem.ScheduleDequeueTime;
+                    job.ScheduleDequeueTime = now - job.ScheduleDequeueTime;
                 }
 
-                var redisValue = (RedisValue)JsonConvert.SerializeObject(queueItem);
+                var redisValue = (RedisValue)JsonConvert.SerializeObject(job);
 
-                // Cannot schedule past job. 100ms to compensate time different among servers.
-                if (queueItem.ScheduleDequeueTime < now - 5000)
+                // Cannot schedule past job. 1000ms to compensate time different among servers and network latency.
+                if (job.ScheduleDequeueTime < now - 1000)
                 {
                     success = false;
                     ex = new ArgumentException(
-                        $"Id={queueItem.Id} Cannot schedule item in the past!. Now={now}, ScheduleDequeueTime={queueItem.ScheduleDequeueTime}, JobMessage={JsonConvert.SerializeObject(queueItem)}",
-                        nameof(queueItem.ScheduleDequeueTime));
+                        $"Id={job.Id} Cannot schedule item in the past!. Now={now}, ScheduleDequeueTime={job.ScheduleDequeueTime}, JobMessage={JsonConvert.SerializeObject(job)}",
+                        nameof(job.ScheduleDequeueTime));
                     break;
                 }
 
-                if (await Database.HashExistsAsync(HashKey, queueItem.Id).ConfigureAwait(false))
+                if (await Database.HashExistsAsync(HashKey, job.Id).ConfigureAwait(false))
                 {
                     success = false;
                     ex = new ConflictException(
-                        $"Id={queueItem.Id} already exists!"
+                        $"Id={job.Id} already exists!"
                         );
                     break;
                 }
 
-                idToJobs.AddLast(new HashEntry(queueItem.Id, redisValue));
+                idToJobs.AddLast(new HashEntry(job.Id, redisValue));
 
-                scheduleItems.AddLast(new SortedSetEntry(redisValue, queueItem.ScheduleDequeueTime));
+                scheduleItems.AddLast(new SortedSetEntry(redisValue, job.ScheduleDequeueTime));
             }
 
             if (idToJobs.Any())

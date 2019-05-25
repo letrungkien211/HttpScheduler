@@ -89,6 +89,7 @@ namespace KL.HttpScheduler.Api.Controllers
         /// <returns></returns>
         [HttpGet("")]
         [ProducesResponseType(typeof(IEnumerable<HttpJob>), (int)HttpStatusCode.OK)]
+        [SwaggerRequestExample(typeof(GetAllParameters), typeof(GetAllParametersExample))]
         public Task<IEnumerable<HttpJob>> GetAll([FromQuery]GetAllParameters parameters)
         {
             return sortedSetScheduleClient.ListAsync(parameters.Start, parameters.Count);

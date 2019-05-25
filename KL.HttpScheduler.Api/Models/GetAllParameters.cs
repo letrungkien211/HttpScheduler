@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Swashbuckle.AspNetCore.Examples;
+using System.ComponentModel.DataAnnotations;
 
 namespace KL.HttpScheduler.Api.Models
 {
@@ -18,5 +19,17 @@ namespace KL.HttpScheduler.Api.Models
         /// </summary>
         [Range(1, 100)]
         public int Count { get; set; }
+    }
+
+    internal class GetAllParametersExample : IExamplesProvider
+    {
+        public object GetExamples()
+        {
+            return new GetAllParameters()
+            {
+                Start = 0,
+                Count = 10
+            };
+        }
     }
 }
