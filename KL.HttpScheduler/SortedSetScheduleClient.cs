@@ -18,17 +18,20 @@ namespace KL.HttpScheduler
         private string SortedSetKey { get; }
         private string HashKey { get; }
         private TelemetryClient Logger { get; }
+        private MyActionBlock ActionBlock { get; }
 
         /// <summary>
         /// Redis scheduler
         /// </summary>
         public SortedSetScheduleClient(
+            MyActionBlock myActionBlock,
             IDatabase database,
             string sortedSetKey,
             string hashKey,
             TelemetryClient logger
             )
         {
+            ActionBlock = myActionBlock;
             Database = database;
             SortedSetKey = sortedSetKey;
             HashKey = hashKey;
@@ -45,6 +48,7 @@ namespace KL.HttpScheduler
             // Make a copy of original jobs
             var jobList = jobs.Select(job => JsonConvert.DeserializeObject<HttpJob>(JsonConvert.SerializeObject(job))).ToList();
 
+            var immediateJobs = new LinkedList<HttpJob>();
             var idToJobs = new LinkedList<HashEntry>();
             var scheduleItems = new LinkedList<SortedSetEntry>();
             var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
@@ -57,19 +61,6 @@ namespace KL.HttpScheduler
                 {
                     job.ScheduleDequeueTime = now - job.ScheduleDequeueTime;
                 }
-
-                var redisValue = (RedisValue)JsonConvert.SerializeObject(job);
-
-                // Cannot schedule past job. 1000ms to compensate time different among servers and network latency.
-                if (job.ScheduleDequeueTime < now - 1000)
-                {
-                    success = false;
-                    ex = new ArgumentException(
-                        $"Id={job.Id} Cannot schedule item in the past!. Now={now}, ScheduleDequeueTime={job.ScheduleDequeueTime}, JobMessage={JsonConvert.SerializeObject(job)}",
-                        nameof(job.ScheduleDequeueTime));
-                    break;
-                }
-
                 if (await Database.HashExistsAsync(HashKey, job.Id).ConfigureAwait(false))
                 {
                     success = false;
@@ -79,17 +70,17 @@ namespace KL.HttpScheduler
                     break;
                 }
 
-                idToJobs.AddLast(new HashEntry(job.Id, redisValue));
+                if (job.ScheduleDequeueTime < now + 100)
+                {
+                    immediateJobs.AddLast(job);
+                }
+                else
+                {
+                    var redisValue = (RedisValue)JsonConvert.SerializeObject(job);
 
-                scheduleItems.AddLast(new SortedSetEntry(redisValue, job.ScheduleDequeueTime));
-            }
-
-            if (idToJobs.Any())
-                await Database.HashSetAsync(HashKey, idToJobs.ToArray()).ConfigureAwait(false);
-
-            if (scheduleItems.Any())
-            {
-                await Database.SortedSetAddAsync(SortedSetKey, scheduleItems.ToArray()).ConfigureAwait(false);
+                    idToJobs.AddLast(new HashEntry(job.Id, redisValue));
+                    scheduleItems.AddLast(new SortedSetEntry(redisValue, job.ScheduleDequeueTime));
+                }
             }
 
             var jobListJsonStr = JsonConvert.SerializeObject(jobList);
@@ -105,6 +96,22 @@ namespace KL.HttpScheduler
                 telemetry.Context.Operation.Id = job.Id;
                 Logger.TrackTrace(telemetry);
             }
+
+            if (success)
+            {
+                if (idToJobs.Any())
+                    await Database.HashSetAsync(HashKey, idToJobs.ToArray()).ConfigureAwait(false);
+
+                if (scheduleItems.Any())
+                {
+                    await Database.SortedSetAddAsync(SortedSetKey, scheduleItems.ToArray()).ConfigureAwait(false);
+                }
+                foreach(var job in immediateJobs)
+                {
+                    ActionBlock.Post(job);
+                }
+            }
+
             return (success, ex);
         }
 

@@ -20,6 +20,7 @@ namespace KL.HttpScheduler
         /// Schedule dequeue time in epoch time milliseconds
         /// Positive: Absolute Value
         /// Negative: Relative to current time. E.g: -1000 means run after 1s
+        /// Zero: Execute immediately
         /// </summary>
         [JsonProperty("scheduleDequeueTime")]
         [JsonRequired]

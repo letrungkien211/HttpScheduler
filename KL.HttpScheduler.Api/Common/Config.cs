@@ -6,6 +6,10 @@
     public class Config
     {
         /// <summary>
+        /// Decide if the background runner task pulling from redis cache would run or not.
+        /// </summary>
+        public bool IsNotRunner { get; set; } = false;
+        /// <summary>
         /// Redis connection string
         /// </summary>
         public string RedisConnectionString { get; set; } = "localhost:6379,ssl=False,abortConnect=False";

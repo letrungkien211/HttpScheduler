@@ -42,6 +42,65 @@ spec:
         env:
           - name: ASPNETCORE_ENVIRONMENT
             value: '#{ASPNETCORE_ENVIRONMENT}#'
+          - name: Config__IsNotRunner
+            value: 'true'
+          - name: Config__SwaggerBasePath
+            value: '#{BASEPATH}#'
+          - name: ApplicationInsights__InstrumentationKey
+            valueFrom:
+              secretKeyRef:
+                name: #{NAMESPACE}#-secrets
+                key: applicationinsights-instrumentationkey
+          - name: ApplicationInsights__ApplicationId
+            valueFrom:
+              secretKeyRef:
+                name: #{NAMESPACE}#-secrets
+                key: applicationinsights-applicationid
+          - name: ApplicationInsights__ApiKey
+            valueFrom:
+              secretKeyRef:
+                name: #{NAMESPACE}#-secrets
+                key: applicationinsights-apikey
+          - name: Config__RedisConnectionString
+            valueFrom:
+              secretKeyRef:
+                name: #{NAMESPACE}#-secrets
+                key: config-redisconnectionstring
+        ports:
+        - containerPort: 80
+          name:  "http-port"
+        readinessProbe:
+          httpGet:
+            path: /
+            port: "http-port"
+          initialDelaySeconds: 10
+      imagePullSecrets:
+        - name: '#{ACRNAME}#'
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: '#{NAMESPACE}#'
+  name: '#{RUNNER_IMAGENAME}#'
+spec:
+  replicas: #{RunnerReplicas}#
+  selector:
+    matchLabels:
+      app: '#{RUNNER_IMAGENAME}#'
+  template:
+    metadata:
+      labels:
+        app: '#{RUNNER_IMAGENAME}#'
+    spec:
+      containers:
+      - name: '#{RUNNER_IMAGENAME}#'
+        image: '#{ACRNAME}#.azurecr.io/#{RUNNER_IMAGENAME}#:#{Build.SourceBranchName}#-#{Build.BuildId}#'
+        env:
+          - name: ASPNETCORE_ENVIRONMENT
+            value: '#{ASPNETCORE_ENVIRONMENT}#'
+          - name: Config__IsNotRunner
+            value: 'false'
           - name: Config__SwaggerBasePath
             value: '#{BASEPATH}#'
           - name: ApplicationInsights__InstrumentationKey

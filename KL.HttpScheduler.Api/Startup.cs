@@ -78,10 +78,11 @@ namespace KL.HttpScheduler.Api
             services.AddSingleton<SortedSetScheduleClient>(provider =>
             {
                 return new SortedSetScheduleClient(
-                    provider.GetService<IDatabase>(),
-                    Config.SortedSetKey, Config.HashKey,
-                    provider.GetService<TelemetryClient>()
-                    );
+                        provider.GetService<MyActionBlock>(),
+                        provider.GetService<IDatabase>(),
+                        Config.SortedSetKey, Config.HashKey,
+                        provider.GetService<TelemetryClient>()
+                        );
             });
 
             services.AddRouting(options => options.LowercaseUrls = true);
@@ -97,7 +98,10 @@ namespace KL.HttpScheduler.Api
                     module.AuthenticationApiKey = appInsightsConfig.ApiKey;
             });
 
-            services.AddSingleton<SchedulerRunner>();
+            if (!Config.IsNotRunner)
+            {
+                services.AddSingleton<SchedulerRunner>();
+            }
 
             // Register the Swagger generator, defining 1 or more Swagger documents
             services.AddSwaggerGen(c =>
@@ -155,32 +159,57 @@ namespace KL.HttpScheduler.Api
             logger.LogInformation("Configure starts");
 
             app.ApplicationServices.GetService<SortedSetScheduleClient>();
-            var schedulerRunner = app.ApplicationServices.GetService<SchedulerRunner>();
-            var manualEvent = new ManualResetEventSlim();
 
             var actionBlock = app.ApplicationServices.GetService<MyActionBlock>();
+            var manualEvent = new ManualResetEventSlim();
 
-            Task.Run(async () =>
+            if (!Config.IsNotRunner)
             {
-                await schedulerRunner.RunAsync(applicationLifetime.ApplicationStopped).ConfigureAwait(false);
-                await actionBlock.CompleteAsync().ConfigureAwait(false);
-                manualEvent.Set();
-                logger.LogInformation("Background stopped");
-            });
+                Task.Run(async () =>
+                {
+                    await app.ApplicationServices.GetService<SchedulerRunner>().RunAsync(applicationLifetime.ApplicationStopped).ConfigureAwait(false);
+                    await actionBlock.CompleteAsync().ConfigureAwait(false);
+                    manualEvent.Set();
+                    logger.LogInformation("Background stopped");
+                });
 
-            applicationLifetime.ApplicationStopped.Register(() =>
+                applicationLifetime.ApplicationStopped.Register(() =>
+                {
+                    if (manualEvent.Wait(TimeSpan.FromSeconds(2)))
+                    {
+                        logger.LogInformation("Gracefully shutdown");
+                    }
+                    else
+                    {
+                        logger.LogError("Shutdown incorrectly");
+                    }
+                    telemetryConfig.TelemetryChannel.Flush();
+                    Thread.Sleep(2000);
+                });
+            }
+            else
             {
-                if (manualEvent.Wait(TimeSpan.FromSeconds(2)))
+                applicationLifetime.ApplicationStopped.Register(() =>
                 {
-                    logger.LogInformation("Gracefully shutdown");
-                }
-                else
-                {
-                    logger.LogError("Shutdown incorrectly");
-                }
-                telemetryConfig.TelemetryChannel.Flush();
-                Thread.Sleep(2000);
-            });
+                    Task.Run(async () =>
+                    {
+                        await actionBlock.CompleteAsync().ConfigureAwait(false);
+                        manualEvent.Set();
+                        logger.LogInformation("Background stopped");
+                    });
+
+                    if (manualEvent.Wait(TimeSpan.FromSeconds(2)))
+                    {
+                        logger.LogInformation("Gracefully shutdown");
+                    }
+                    else
+                    {
+                        logger.LogError("Shutdown incorrectly");
+                    }
+                    telemetryConfig.TelemetryChannel.Flush();
+                    Thread.Sleep(2000);
+                });
+            }
 
             if (env.IsDevelopment())
             {
