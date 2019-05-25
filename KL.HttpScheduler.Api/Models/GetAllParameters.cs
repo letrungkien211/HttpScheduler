@@ -12,13 +12,13 @@ namespace KL.HttpScheduler.Api.Models
         /// Start index (sorted by scheduledequeue score)
         /// </summary>
         [Range(0, int.MaxValue)]
-        public int Start { get; set; }
+        public int Start { get; set; } = 0;
 
         /// <summary>
         /// Max number of elements to return
         /// </summary>
         [Range(1, 100)]
-        public int Count { get; set; }
+        public int Count { get; set; } = 10;
     }
 
     internal class GetAllParametersExample : IExamplesProvider
