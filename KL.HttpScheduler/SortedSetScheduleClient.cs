@@ -57,16 +57,14 @@ namespace KL.HttpScheduler
             foreach (var job in jobList)
             {
                 job.EnqueuedTime = now;
-                if (job.ScheduleDequeueTime < 0)
+                if (job.ScheduleDequeueTime <= 0)
                 {
                     job.ScheduleDequeueTime = now - job.ScheduleDequeueTime;
                 }
                 if (await Database.HashExistsAsync(HashKey, job.Id).ConfigureAwait(false))
                 {
                     success = false;
-                    ex = new ConflictException(
-                        $"Id={job.Id} already exists!"
-                        );
+                    ex = new ConflictException( $"Id={job.Id} already exists!");
                     break;
                 }
 
