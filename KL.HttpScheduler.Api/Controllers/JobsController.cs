@@ -1,12 +1,8 @@
-﻿using KL.HttpScheduler.Api.Common;
-using KL.HttpScheduler.Api.Models;
+﻿using KL.HttpScheduler.Api.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Swashbuckle.AspNetCore.Examples;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 
