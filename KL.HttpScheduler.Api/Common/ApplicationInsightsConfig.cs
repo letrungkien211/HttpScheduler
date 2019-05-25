@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 
 namespace KL.HttpScheduler.Api.Common
 {
@@ -26,9 +27,10 @@ namespace KL.HttpScheduler.Api.Common
         /// </summary>
         public string ApiKey { get; set; }
 
+        [JsonIgnore]
         /// <summary>
         /// Api Url
         /// </summary>
-        public Uri ApiUrl { get; } = new Uri("https://api.applicationinsights.io/v1/apps/{appInsightsConfig.ApplicationId}/");
+        public Uri ApiUrl => new Uri($"https://api.applicationinsights.io/v1/apps/{ApplicationId}/");
     }
 }
