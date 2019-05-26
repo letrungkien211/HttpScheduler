@@ -132,7 +132,7 @@ spec:
             port: "http-port"
           initialDelaySeconds: 10
       imagePullSecrets:
-        - name: '#{ACRNAME}#'
+        - name: 'fake'
 
 # Define the service to forward to above deployment
 ---
