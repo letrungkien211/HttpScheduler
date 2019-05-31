@@ -16,6 +16,12 @@ variables:
   deploymentDirectory: './KL.HttpScheduler.Api/KS/Deployment/'
 
 steps:
+  - task: ComponentGovernanceComponentDetection@0
+    inputs:
+      scanType: 'Register'
+      verbosity: 'Verbose'
+      alertWarningLevel: 'High'
+    displayName: 'Component Detection'
   - bash: docker build -f ./KL.HttpScheduler.Api/Dockerfile -t $(tag) .
     displayName: Build docker file
   - bash: redisid=`docker run -p 6379:6379 -d redis`
