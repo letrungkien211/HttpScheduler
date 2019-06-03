@@ -45,35 +45,56 @@ namespace KL.HttpScheduler
         /// <returns></returns>
         public async Task<(bool, Exception)> ScheduleAsync(IEnumerable<HttpJob> jobs)
         {
-            // Make a copy of original jobs
-            var jobList = jobs.Select(job => JsonConvert.DeserializeObject<HttpJob>(JsonConvert.SerializeObject(job))).ToList();
-
-            var immediateJobs = new LinkedList<HttpJob>();
-            var idToJobs = new LinkedList<HashEntry>();
-            var scheduleItems = new LinkedList<SortedSetEntry>();
             var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-            var success = true;
-            Exception ex = null;
-            foreach (var job in jobList)
+            var commonBatchId = Guid.NewGuid().ToString();
+
+            // Make a copy of original jobs with preprocessing
+            var jobList = jobs.Select(origin =>
             {
+                var job = JsonConvert.DeserializeObject<HttpJob>(JsonConvert.SerializeObject(origin));
                 job.EnqueuedTime = now;
                 if (job.ScheduleDequeueTime <= 0)
                 {
                     job.ScheduleDequeueTime = now - job.ScheduleDequeueTime;
                 }
-                if (await Database.HashExistsAsync(HashKey, job.Id).ConfigureAwait(false))
-                {
-                    success = false;
-                    ex = new ConflictException( $"Id={job.Id} already exists!");
-                    break;
-                }
+                job.BatchId = commonBatchId;
+                return job;
+            }).OrderBy(x => x.ScheduleDequeueTime) // Or der by schedule dequeue time to ensure immediate jobs are executed event in the case of redis cache failure
+            .ToList();
 
+            // Run immediately or add to schedule list
+            var idToJobs = new LinkedList<HashEntry>();
+            var scheduleItems = new LinkedList<SortedSetEntry>();
+            var immediateJobIds = new HashSet<string>();
+            var success = true;
+            Exception ex = null;
+            foreach (var job in jobList)
+            {
                 if (job.ScheduleDequeueTime < now + 100)
                 {
-                    immediateJobs.AddLast(job);
+                    var enqueueSuccess = ActionBlock.Post(job);
+                    if (!enqueueSuccess)
+                    {
+                        Logger.GetMetric("ImmediateLocalEnqueueFailure").TrackValue(1);
+                    }
+                    var telemetry = new TraceTelemetry($"Id={job.Id}. Queue for immediate local execution: {enqueueSuccess } ")
+                    {
+                        SeverityLevel = enqueueSuccess ? SeverityLevel.Information : SeverityLevel.Error
+                    };
+                    telemetry.Context.Operation.Id = job.Id;
+                    telemetry.Properties["httpJob"] = JsonConvert.SerializeObject(job);
+                    telemetry.Properties["batchId"] = job.BatchId;
+                    Logger.TrackTrace(telemetry);
+                    immediateJobIds.Add(job.Id);
                 }
                 else
                 {
+                    if (await Database.HashExistsAsync(HashKey, job.Id).ConfigureAwait(false))
+                    {
+                        success = false;
+                        ex = new ConflictException($"Id={job.Id} already exists!");
+                        break;
+                    }
                     var redisValue = (RedisValue)JsonConvert.SerializeObject(job);
 
                     idToJobs.AddLast(new HashEntry(job.Id, redisValue));
@@ -81,20 +102,22 @@ namespace KL.HttpScheduler
                 }
             }
 
-            var commonBatchId = Guid.NewGuid().ToString();
+            // Log all scheduled jobs
             foreach (var job in jobList)
             {
-                var str = success ? "Success" : $"Failure. Ex={ex}";
-                var telemetry = new TraceTelemetry($"Id={job.Id}. Schedule: {str}.")
+                if (immediateJobIds.Contains(job.Id))
+                    continue;
+                var telemetry = new TraceTelemetry($"Id={job.Id}. Schedule: {success}.")
                 {
                     SeverityLevel = success ? SeverityLevel.Information : SeverityLevel.Error
                 };
                 telemetry.Properties["httpJob"] = JsonConvert.SerializeObject(job);
-                telemetry.Properties["batchId"] = commonBatchId;
+                telemetry.Properties["batchId"] = job.BatchId;
                 telemetry.Context.Operation.Id = job.Id;
                 Logger.TrackTrace(telemetry);
             }
 
+            // If success
             if (success)
             {
                 if (idToJobs.Any())
@@ -103,10 +126,6 @@ namespace KL.HttpScheduler
                 if (scheduleItems.Any())
                 {
                     await Database.SortedSetAddAsync(SortedSetKey, scheduleItems.ToArray()).ConfigureAwait(false);
-                }
-                foreach(var job in immediateJobs)
-                {
-                    ActionBlock.Post(job);
                 }
             }
 

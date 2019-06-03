@@ -67,5 +67,11 @@ namespace KL.HttpScheduler
         /// </summary>
         [JsonProperty("body")]
         public string Body { get; set; }
+
+        /// <summary>
+        /// Batch Id
+        /// </summary>
+        [JsonProperty("batchId")]
+        internal string BatchId { get; set; }
     }
 }
