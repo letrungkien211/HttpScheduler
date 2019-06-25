@@ -98,8 +98,11 @@ namespace KL.HttpScheduler.Api
                 if (!string.IsNullOrEmpty(appInsightsConfig.ApiKey))
                     module.AuthenticationApiKey = appInsightsConfig.ApiKey;
             });
-            services.AddApplicationInsightsTelemetry(new ApplicationInsightsServiceOptions() { EnableAdaptiveSampling = false });
-
+            services.AddApplicationInsightsTelemetry(new ApplicationInsightsServiceOptions()
+            {
+                EnableAdaptiveSampling = false,
+                InstrumentationKey = Configuration["ApplicationInsights:InstrumentationKey"]
+            });
 
             if (!Config.IsNotRunner)
             {
