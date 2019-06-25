@@ -1,6 +1,7 @@
 ﻿using KL.HttpScheduler.Api.Common;
 using KL.HttpScheduler.Api.Controllers;
 using Microsoft.ApplicationInsights;
+using Microsoft.ApplicationInsights.AspNetCore.Extensions;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.QuickPulse;
 using Microsoft.AspNetCore.Builder;
@@ -97,6 +98,8 @@ namespace KL.HttpScheduler.Api
                 if (!string.IsNullOrEmpty(appInsightsConfig.ApiKey))
                     module.AuthenticationApiKey = appInsightsConfig.ApiKey;
             });
+            services.AddApplicationInsightsTelemetry(new ApplicationInsightsServiceOptions() { EnableAdaptiveSampling = false });
+
 
             if (!Config.IsNotRunner)
             {
