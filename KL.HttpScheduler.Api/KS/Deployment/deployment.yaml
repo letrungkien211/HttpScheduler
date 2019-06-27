@@ -5,6 +5,17 @@ metadata:
   labels:
     name: #{NAMESPACE}#
 
+---
+apiVersion: v1
+data:
+  auth: #{BASICAUTH}#
+kind: Secret
+metadata:
+  name: basic-auth
+  namespace: #{NAMESPACE}#
+type: Opaque
+
+
 # Define secret
 ---
 apiVersion: v1
