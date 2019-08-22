@@ -33,6 +33,12 @@ namespace KL.HttpScheduler
         internal long? DequeuedTime { get; set; }
 
         /// <summary>
+        /// When actual dequeue time is late, job will be discarded. Default value is 5000 milliseconds.
+        /// </summary>
+        [JsonProperty("scheduleDequeueTimeLatencyTimeout")]
+        public long ScheduleDequeueTimeLatencyTimeout { get; set; } = (long)TimeSpan.FromSeconds(5).TotalMilliseconds;
+
+        /// <summary>
         /// Enqueued time. Use internally. Do not set this value via API (will be ignored).
         /// </summary>
         [JsonProperty("enqueuedTime")]

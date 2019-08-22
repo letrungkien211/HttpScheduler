@@ -54,19 +54,24 @@ namespace KL.HttpScheduler
 
                 if (httpJob != null)
                 {
-                    Logger.GetMetric("ScheduleDequeueLatency").TrackValue(httpJob.DequeuedTime - httpJob.ScheduleDequeueTime);
+                    var dequeueLatency = httpJob.DequeuedTime - httpJob.ScheduleDequeueTime;
+                    var expired = dequeueLatency > httpJob.ScheduleDequeueTimeLatencyTimeout;
+                    Logger.GetMetric("ScheduleDequeueLatency", "Expired").TrackValue(dequeueLatency, expired.ToString());
 
-                    var enqueueSuccess = ActionBlock.Post(httpJob);
+                    var enqueueSuccess = !expired && ActionBlock.Post(httpJob);
                     if (!enqueueSuccess)
                     {
                         Logger.GetMetric("ScheduleLocalEnqueueFailure").TrackValue(1);
                     }
-                    var telemetry = new TraceTelemetry($"Id={httpJob.Id}. Queue for local execution: {enqueueSuccess } ")
+                    var telemetry = new TraceTelemetry($"Id={httpJob.Id}. Expired={expired}. Latency={dequeueLatency}. Queue for local execution: {enqueueSuccess } ")
                     {
                         SeverityLevel = enqueueSuccess ? SeverityLevel.Information : SeverityLevel.Error
                     };
                     telemetry.Context.Operation.Id = httpJob.Id;
                     telemetry.Properties["httpJob"] = JsonConvert.SerializeObject(httpJob);
+                    telemetry.Properties["ScheduleDequeueLatency"] = dequeueLatency.ToString();
+                    telemetry.Properties["Expired"] = expired.ToString();
+
                     Logger.TrackTrace(telemetry);
                     continue;
                 }
