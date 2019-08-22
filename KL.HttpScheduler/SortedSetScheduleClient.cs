@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -72,19 +73,15 @@ namespace KL.HttpScheduler
             {
                 if (job.ScheduleDequeueTime < now + 100)
                 {
-                    var enqueueSuccess = ActionBlock.Post(job);
-                    if (!enqueueSuccess)
-                    {
-                        Logger.GetMetric("ImmediateLocalEnqueueFailure").TrackValue(1);
-                    }
-                    var telemetry = new TraceTelemetry($"Id={job.Id}. Queue for immediate local execution: {enqueueSuccess } ")
-                    {
-                        SeverityLevel = enqueueSuccess ? SeverityLevel.Information : SeverityLevel.Error
-                    };
+                    var expired = job.ScheduleDequeueTime < now - job.ScheduleDequeueTimeLatencyTimeout;
+                    var executeStarted = !expired && ActionBlock.Post(job);
+                    var telemetry = new EventTelemetry("ImmediateExecution");
                     telemetry.Context.Operation.Id = job.Id;
                     telemetry.Properties["httpJob"] = JsonConvert.SerializeObject(job);
                     telemetry.Properties["batchId"] = job.BatchId;
-                    Logger.TrackTrace(telemetry);
+                    telemetry.Properties["expired"] = expired.ToString();
+                    telemetry.Properties["executeStarted"] = executeStarted.ToString();
+                    Logger.TrackEvent(telemetry);
                     immediateJobIds.Add(job.Id);
                 }
                 else
@@ -102,24 +99,10 @@ namespace KL.HttpScheduler
                 }
             }
 
-            // Log all scheduled jobs
-            foreach (var job in jobList)
-            {
-                if (immediateJobIds.Contains(job.Id))
-                    continue;
-                var telemetry = new TraceTelemetry($"Id={job.Id}. Schedule: {success}.")
-                {
-                    SeverityLevel = success ? SeverityLevel.Information : SeverityLevel.Error
-                };
-                telemetry.Properties["httpJob"] = JsonConvert.SerializeObject(job);
-                telemetry.Properties["batchId"] = job.BatchId;
-                telemetry.Context.Operation.Id = job.Id;
-                Logger.TrackTrace(telemetry);
-            }
-
             // If success
             if (success)
             {
+                var stopWatch = Stopwatch.StartNew();
                 if (idToJobs.Any())
                     await Database.HashSetAsync(HashKey, idToJobs.ToArray()).ConfigureAwait(false);
 
@@ -127,8 +110,21 @@ namespace KL.HttpScheduler
                 {
                     await Database.SortedSetAddAsync(SortedSetKey, scheduleItems.ToArray()).ConfigureAwait(false);
                 }
+                Logger.GetMetric("RedisAdd").TrackValue(stopWatch.ElapsedMilliseconds);
             }
 
+            // Log all scheduled jobs
+            foreach (var job in jobList)
+            {
+                if (immediateJobIds.Contains(job.Id))
+                    continue;
+                var telemetry = new EventTelemetry($"Enqueue");
+                telemetry.Properties["httpJob"] = JsonConvert.SerializeObject(job);
+                telemetry.Properties["batchId"] = job.BatchId;
+                telemetry.Properties["success"] = success.ToString();
+                telemetry.Context.Operation.Id = job.Id;
+                Logger.TrackEvent(telemetry);
+            }
             return (success, ex);
         }
 

@@ -58,32 +58,18 @@ namespace KL.HttpScheduler
                     var expired = dequeueLatency > httpJob.ScheduleDequeueTimeLatencyTimeout;
                     Logger.GetMetric("ScheduleDequeueLatency", "Expired").TrackValue(dequeueLatency, expired.ToString());
 
-                    var enqueueSuccess = !expired && ActionBlock.Post(httpJob);
-                    if (!enqueueSuccess)
-                    {
-                        Logger.GetMetric("ScheduleLocalEnqueueFailure").TrackValue(1);
-                    }
-                    var telemetry = new TraceTelemetry($"Id={httpJob.Id}. Expired={expired}. Latency={dequeueLatency}. Queue for local execution: {enqueueSuccess } ")
-                    {
-                        SeverityLevel = enqueueSuccess ? SeverityLevel.Information : SeverityLevel.Error
-                    };
+                    var executeStarted = !expired && ActionBlock.Post(httpJob);
+                    var telemetry = new EventTelemetry("Dequeue"); 
                     telemetry.Context.Operation.Id = httpJob.Id;
                     telemetry.Properties["httpJob"] = JsonConvert.SerializeObject(httpJob);
-                    telemetry.Properties["ScheduleDequeueLatency"] = dequeueLatency.ToString();
-                    telemetry.Properties["Expired"] = expired.ToString();
-
-                    Logger.TrackTrace(telemetry);
+                    telemetry.Properties["scheduleDequeueLatency"] = dequeueLatency.ToString();
+                    telemetry.Properties["expired"] = expired.ToString();
+                    telemetry.Properties["executeStarted"] = executeStarted.ToString();
+                    Logger.TrackEvent(telemetry);
                     continue;
                 }
 
-                try
-                {
-                    await Task.Delay(100, cancellationToken).ConfigureAwait(false);
-                }
-                catch
-                {
-                    // Ignore
-                }
+                await Task.Delay(100, cancellationToken).ContinueWith(_ => { }).ConfigureAwait(false);
             }
         }
     }
