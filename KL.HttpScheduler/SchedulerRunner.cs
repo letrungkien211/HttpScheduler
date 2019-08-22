@@ -55,7 +55,7 @@ namespace KL.HttpScheduler
                 if (httpJob != null)
                 {
                     var dequeueLatency = httpJob.DequeuedTime - httpJob.ScheduleDequeueTime;
-                    var expired = dequeueLatency > TimeSpan.FromSeconds(5).TotalMilliseconds;
+                    var expired = dequeueLatency > httpJob.ScheduleDequeueTimeLatencyTimeout;
                     Logger.GetMetric("ScheduleDequeueLatency", "Expired").TrackValue(dequeueLatency, expired.ToString());
 
                     var enqueueSuccess = !expired && ActionBlock.Post(httpJob);
