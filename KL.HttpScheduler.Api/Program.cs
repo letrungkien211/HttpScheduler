@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.ApplicationInsights;
+using System.Net;
 using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("KL.HttpScheduler.Tests")]
@@ -12,6 +13,7 @@ namespace KL.HttpScheduler.Api
     {
         public static void Main(string[] args)
         {
+            ServicePointManager.DefaultConnectionLimit = int.MaxValue;
             CreateWebHostBuilder(args).Build().Run();
         }
 
