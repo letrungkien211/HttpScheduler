@@ -125,6 +125,9 @@ namespace KL.HttpScheduler.Api.Controllers
                 {
                     case ConflictException _:
                         return StatusCode((int)HttpStatusCode.Conflict, ex);
+                    case EnqueueException _:
+                        return StatusCode((int)HttpStatusCode.ServiceUnavailable, ex);
+                    case ExpiredException _:
                     default:
                         return BadRequest(ex);
                 }
