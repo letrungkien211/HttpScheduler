@@ -57,6 +57,11 @@ namespace KL.HttpScheduler.Api
         public void ConfigureServices(IServiceCollection services)
         {
             Config = Configuration.GetSection("Config").Get<Config>() ?? new Config();
+            var actionBlockOptions = Configuration.GetSection("ActionBlock").Get<MyActionBlockOptions>();
+            // https://stackoverflow.com/questions/46834697/threadpool-setminthreads-the-impact-of-setting-it
+            ThreadPool.GetMinThreads(out var minw, out var minp);
+            ThreadPool.SetMinThreads(minw, actionBlockOptions.MaxConcurrentTasksPerProcessor * Environment.ProcessorCount);
+
             var appInsightsConfig = Configuration.GetSection("ApplicationInsights").Get<ApplicationInsightsConfig>() ?? new ApplicationInsightsConfig();
 
             services.Configure<MyActionBlockOptions>(Configuration.GetSection("ActionBlock"));
