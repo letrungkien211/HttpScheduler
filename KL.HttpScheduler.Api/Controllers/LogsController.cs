@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace KL.HttpScheduler.Api.Controllers
@@ -31,10 +32,11 @@ namespace KL.HttpScheduler.Api.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <param name="hoursAgo"></param>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
         [HttpGet("{id}")]
         [ProducesResponseType((int)HttpStatusCode.OK)]
-        public async Task<IActionResult> Get(string id, [FromQuery]int hoursAgo = 24)
+        public async Task<IActionResult> Get(string id, [FromQuery]int hoursAgo = 24, CancellationToken cancellationToken = default(CancellationToken))
         {
             var client = HttpClientFactory.CreateAppInsightsClient();
             var query = $"traces | where timestamp > ago({hoursAgo}h) | where operation_Id=='{id}'| project timestamp , message ";
@@ -43,7 +45,7 @@ namespace KL.HttpScheduler.Api.Controllers
                 Content = new StringContent(JsonConvert.SerializeObject(new { query }), Encoding.UTF8, "application/json")
             };
 
-            var res = await client.SendAsync(req);
+            var res = await client.SendAsync(req, cancellationToken);
 
             var contentResult = Content(await res.Content.ReadAsStringAsync(), "application/json");
             contentResult.StatusCode = (int)res.StatusCode;
