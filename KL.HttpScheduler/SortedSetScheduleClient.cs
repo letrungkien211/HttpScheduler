@@ -10,6 +10,20 @@ using System.Threading.Tasks;
 
 namespace KL.HttpScheduler
 {
+    public class ExpiredException : Exception
+    {
+        public ExpiredException(string message) : base(message)
+        {
+        }
+    }
+
+    public class EnqueueException : Exception
+    {
+        public EnqueueException(string message) : base(message)
+        {
+        }
+    }
+
     /// <summary>
     /// Redis scheduler
     /// </summary>
@@ -75,6 +89,13 @@ namespace KL.HttpScheduler
                 {
                     var expired = job.ScheduleDequeueTime < now - job.ScheduleDequeueTimeLatencyTimeout;
                     var executeStarted = !expired && ActionBlock.Post(job);
+                    if (!executeStarted)
+                    {
+                        success = false;
+                        ex = expired ? new ExpiredException($"Job={job.Id} has been expired. ScheduledTime={DateTimeOffset.FromUnixTimeMilliseconds(job.ScheduleDequeueTime)}. Now={DateTimeOffset.FromUnixTimeMilliseconds(now)}")
+                                        : (Exception)(new EnqueueException($"Job={job.Id} wasn't queued"));
+                        break;
+                    }
                     var telemetry = new EventTelemetry("ImmediateExecution");
                     telemetry.Context.Operation.Id = job.Id;
                     telemetry.Properties["httpJob"] = JsonConvert.SerializeObject(job);

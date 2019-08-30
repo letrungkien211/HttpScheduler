@@ -9,26 +9,31 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
+using Xunit.Abstractions;
+using Xunit.Sdk;
 
 namespace KL.HttpScheduler.Api.Tests
 {
     public class TestJobsController : IClassFixture<WebApplicationFactory<Startup>>
     {
-        private readonly WebApplicationFactory<Startup> _factory;
+        private WebApplicationFactory<Startup> Factory { get; }
 
-        public TestJobsController(WebApplicationFactory<Startup> factory)
+        private ITestOutputHelper TestOutputHelper { get; }
+
+        public TestJobsController(WebApplicationFactory<Startup> factory, ITestOutputHelper testOutputHelper)
         {
             Environment.SetEnvironmentVariable("Config__UnitTest", "true");
-            _factory = factory;
+            Factory = factory;
+            TestOutputHelper = testOutputHelper;
         }
 
         [Fact]
         public async Task TestSchedulerRunner()
         {
-            var client = _factory.CreateClient();
+            var client = Factory.CreateClient();
 
             using (var cancelSource = new CancellationTokenSource())
-            using (var scope = _factory.Server.Host.Services.CreateScope())
+            using (var scope = Factory.Server.Host.Services.CreateScope())
             {
                 var runner = scope.ServiceProvider.GetRequiredService<SchedulerRunner>();
                 var task = Task.Run(() => runner.RunAsync(cancelSource.Token));
@@ -63,6 +68,25 @@ namespace KL.HttpScheduler.Api.Tests
                 cancelSource.Cancel();
                 await task;
             }
+        }
+
+        [Fact]
+        public async Task TestExpiredScheduling()
+        {
+            var client = Factory.CreateClient();
+
+            var req = new HttpRequestMessage(HttpMethod.Post, "api/jobs");
+            var job = new HttpJob()
+            {
+                Id = Guid.NewGuid().ToString("N"),
+                ScheduleDequeueTime = DateTimeOffset.UtcNow.AddSeconds(-10).ToUnixTimeMilliseconds(),
+                Uri = new Uri("http://localhost/")
+            };
+            req.Content = new StringContent(JsonConvert.SerializeObject(job), Encoding.UTF8, "application/json");
+
+            var res = await client.SendAsync(req);
+            Assert.Equal(HttpStatusCode.BadRequest, res.StatusCode);
+            TestOutputHelper.WriteLine(await res.Content.ReadAsStringAsync());
         }
 
         [Theory]
@@ -101,7 +125,7 @@ namespace KL.HttpScheduler.Api.Tests
         [Fact]
         public async Task TestCancel()
         {
-            var client = _factory.CreateClient();
+            var client = Factory.CreateClient();
 
             var job = new HttpJob()
             {

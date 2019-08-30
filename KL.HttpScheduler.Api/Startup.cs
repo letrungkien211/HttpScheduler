@@ -57,7 +57,14 @@ namespace KL.HttpScheduler.Api
         public void ConfigureServices(IServiceCollection services)
         {
             Config = Configuration.GetSection("Config").Get<Config>() ?? new Config();
+            var actionBlockOptions = Configuration.GetSection("ActionBlock").Get<MyActionBlockOptions>();
+            // https://stackoverflow.com/questions/46834697/threadpool-setminthreads-the-impact-of-setting-it
+            ThreadPool.GetMinThreads(out var minw, out var minp);
+            ThreadPool.SetMinThreads(minw, actionBlockOptions.MaxConcurrentTasksPerProcessor * Environment.ProcessorCount);
+
             var appInsightsConfig = Configuration.GetSection("ApplicationInsights").Get<ApplicationInsightsConfig>() ?? new ApplicationInsightsConfig();
+
+            services.Configure<MyActionBlockOptions>(Configuration.GetSection("ActionBlock"));
 
             services.AddHttpClient();
             services.AddHttpClient(MyExtensions.AppInsightsClientName, client =>
@@ -166,56 +173,21 @@ namespace KL.HttpScheduler.Api
 
             app.ApplicationServices.GetService<SortedSetScheduleClient>();
 
-            var actionBlock = app.ApplicationServices.GetService<MyActionBlock>();
-            var manualEvent = new ManualResetEventSlim();
+            Task.Run(() => app.ApplicationServices.GetService<MyActionBlock>().RunAsync(applicationLifetime.ApplicationStopped)).GetAwaiter();
 
             if (!Config.IsNotRunner)
             {
-                Task.Run(async () =>
-                {
-                    await app.ApplicationServices.GetService<SchedulerRunner>().RunAsync(applicationLifetime.ApplicationStopped).ConfigureAwait(false);
-                    await actionBlock.CompleteAsync().ConfigureAwait(false);
-                    manualEvent.Set();
-                    logger.LogInformation("Background stopped");
-                });
+                Task.Run(() => app.ApplicationServices.GetService<SchedulerRunner>()
+                                  .RunAsync(applicationLifetime.ApplicationStopped)
+                                  .ConfigureAwait(false)).GetAwaiter();
 
-                applicationLifetime.ApplicationStopped.Register(() =>
-                {
-                    if (manualEvent.Wait(TimeSpan.FromSeconds(2)))
-                    {
-                        logger.LogInformation("Gracefully shutdown");
-                    }
-                    else
-                    {
-                        logger.LogError("Shutdown incorrectly");
-                    }
-                    telemetryConfig.TelemetryChannel.Flush();
-                    Thread.Sleep(2000);
-                });
             }
-            else
+
+            applicationLifetime.ApplicationStopped.Register(() =>
             {
-                applicationLifetime.ApplicationStopped.Register(() =>
-                {
-                    Task.Run(async () =>
-                    {
-                        await actionBlock.CompleteAsync().ConfigureAwait(false);
-                        manualEvent.Set();
-                        logger.LogInformation("Background stopped");
-                    });
-
-                    if (manualEvent.Wait(TimeSpan.FromSeconds(2)))
-                    {
-                        logger.LogInformation("Gracefully shutdown");
-                    }
-                    else
-                    {
-                        logger.LogError("Shutdown incorrectly");
-                    }
-                    telemetryConfig.TelemetryChannel.Flush();
-                    Thread.Sleep(2000);
-                });
-            }
+                telemetryConfig.TelemetryChannel.Flush();
+                Thread.Sleep(2000);
+            });
 
             if (env.IsDevelopment())
             {
