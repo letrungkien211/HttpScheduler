@@ -135,8 +135,8 @@ namespace KL.HttpScheduler.Api
                 }
             });
 
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
-                    .AddJsonOptions(options =>
+            services.AddControllers()
+                    .AddNewtonsoftJson(options =>
                     {
                         options.SerializerSettings.NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore;
                     });
@@ -156,7 +156,7 @@ namespace KL.HttpScheduler.Api
         /// <param name="logger"></param>
         public void Configure(
             IApplicationBuilder app,
-            IHostingEnvironment env,
+            IWebHostEnvironment env,
             IApplicationLifetime applicationLifetime,
             ILogger<Startup> logger
             )

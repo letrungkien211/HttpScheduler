@@ -15,25 +15,15 @@ namespace KL.HttpScheduler.Api
     {
         public static void Main(string[] args)
         {
-            ThreadPool.GetMaxThreads(out var maxw, out var maxp);
-            ThreadPool.GetMinThreads(out var minw, out var minp);
-
             ServicePointManager.DefaultConnectionLimit = int.MaxValue;
             CreateWebHostBuilder(args).Build().Run();
         }
 
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
-            WebHost.CreateDefaultBuilder(args)
-                .UseApplicationInsights()
-                .ConfigureLogging((hostingContext, builder) =>
+            Host.CreateDefaultBuilder(args)
+                .ConfigureWebHostDefaults(webBuilder =>
                 {
-                    builder.AddConsole();
-                    builder.AddDebug();
-                    builder.AddFilter<ApplicationInsightsLoggerProvider>((name, level) =>
-                    {
-                        return level >= LogLevel.Information && name.Contains(typeof(HttpJob).Namespace);
-                    });
-                })
-                .UseStartup<Startup>();
+                    webBuilder.UseStartup<Startup>();
+                });
     }
 }
