@@ -22,14 +22,14 @@ steps:
       verbosity: 'Verbose'
       alertWarningLevel: 'High'
     displayName: 'Component Detection'
-  - bash: docker build -f ./KL.HttpScheduler.Api/Dockerfile -t $(tag) .
-    displayName: Build docker file
-  - bash: redisid=`docker run -p 6379:6379 -d redis`
+  - bash: docker run -p 6379:6379 -d redis
     displayName: Run redis
   - bash: dotnet test 
     displayName: Run tests
   - bash: docker stop $(docker ps -aq)
     displayName: Stop all dockers (redis)
+  - bash: docker build -f ./KL.HttpScheduler.Api/Dockerfile -t $(tag) .
+    displayName: Build docker file
   - bash: docker login --username $(ACRNAME) --password $(ACRPASS) $(ACRNAME).azurecr.io
     displayName: Login to $(ACRNAME).azurecr.io
   - bash: docker push $(tag)
