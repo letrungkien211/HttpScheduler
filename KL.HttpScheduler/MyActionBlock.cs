@@ -52,8 +52,8 @@ namespace KL.HttpScheduler
             {
                 case HttpJob httpJob:
                     return JobProcessorWrapper.ProcessAsync(httpJob);
-                case DateTimeOffset guid:
-                    LatestDequeued = guid;
+                case DateTimeOffset datetime:
+                    LatestDequeued = datetime;
                     return Task.CompletedTask;
                 default:
                     return Task.CompletedTask;
