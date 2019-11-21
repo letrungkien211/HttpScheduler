@@ -1,4 +1,4 @@
-﻿using Swashbuckle.AspNetCore.Examples;
+﻿using Swashbuckle.AspNetCore.Filters;
 using System.ComponentModel.DataAnnotations;
 
 namespace KL.HttpScheduler.Api.Models
@@ -21,9 +21,9 @@ namespace KL.HttpScheduler.Api.Models
         public int Count { get; set; } = 10;
     }
 
-    internal class GetAllParametersExample : IExamplesProvider
+    internal class GetAllParametersExample : IExamplesProvider<GetAllParameters>
     {
-        public object GetExamples()
+        public GetAllParameters GetExamples()
         {
             return new GetAllParameters()
             {

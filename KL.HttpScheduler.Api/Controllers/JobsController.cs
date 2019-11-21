@@ -1,7 +1,7 @@
 ﻿using KL.HttpScheduler.Api.Models;
+using KL.HttpScheduler.Api.Swagger;
 using Microsoft.AspNetCore.Mvc;
-using Swashbuckle.AspNetCore.Examples;
-using System;
+using Swashbuckle.AspNetCore.Filters;
 using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
@@ -16,14 +16,14 @@ namespace KL.HttpScheduler.Api.Controllers
     [Produces("application/json")]
     public class JobsController : ControllerBase
     {
-        private readonly SortedSetScheduleClient sortedSetScheduleClient;
+        private SortedSetScheduleClient SortedSetScheduleClient { get; }
         /// <summary>
         /// Instructor
         /// </summary>
         /// <param name="sortedSetScheduleClient"></param>
         public JobsController(SortedSetScheduleClient sortedSetScheduleClient)
         {
-            this.sortedSetScheduleClient = sortedSetScheduleClient;
+            SortedSetScheduleClient = sortedSetScheduleClient;
         }
 
         /// <summary>
@@ -31,11 +31,11 @@ namespace KL.HttpScheduler.Api.Controllers
         /// </summary>
         /// <param name="httpJob">http job</param>
         /// <returns></returns>
+        /// <response code="200">OK</response>
+        /// <response code="400">Bad Request</response>
+        /// <response code="409">Conflict</response>
         [HttpPost("")]
         [SwaggerRequestExample(typeof(HttpJob), typeof(HttpJobExample))]
-        [ProducesResponseType(typeof(ConflictException), (int)HttpStatusCode.Conflict)]
-        [ProducesResponseType(typeof(Exception), (int)HttpStatusCode.BadRequest)]
-        [ProducesResponseType(typeof(void), (int)HttpStatusCode.OK)]
         public Task<IActionResult> Schedule([FromBody]HttpJob httpJob)
         {
             return Batch(new BatchInput()
@@ -49,14 +49,14 @@ namespace KL.HttpScheduler.Api.Controllers
         /// </summary>
         /// <param name="id">http job id</param>
         /// <returns></returns>
+        /// <response code="404">Not Found</response>    
         [HttpDelete("{id}")]
-        [ProducesResponseType(typeof(KeyNotFoundException), (int)HttpStatusCode.NotFound)]
-        [ProducesResponseType(typeof(void), (int)HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.OK)]
         public async Task<IActionResult> Cancel(string id)
         {
             try
             {
-                await sortedSetScheduleClient.CancelAsync(id);
+                await SortedSetScheduleClient.CancelAsync(id);
                 return Ok();
             }
             catch (KeyNotFoundException ex)
@@ -70,12 +70,12 @@ namespace KL.HttpScheduler.Api.Controllers
         /// </summary>
         /// <param name="id">http job id</param>
         /// <returns></returns>
+        /// <response code="404">Not Found</response>    
         [HttpGet("{id}")]
-        [ProducesResponseType(typeof(KeyNotFoundException), (int)HttpStatusCode.NotFound)]
         [ProducesResponseType(typeof(HttpJob), (int)HttpStatusCode.OK)]
         public async Task<IActionResult> Get(string id)
         {
-            var ret = await sortedSetScheduleClient.GetAsync(id);
+            var ret = await SortedSetScheduleClient.GetAsync(id);
             return ret != null ? Ok(ret) : (IActionResult)NotFound(new KeyNotFoundException($"Id={id} was not found!"));
         }
 
@@ -86,9 +86,10 @@ namespace KL.HttpScheduler.Api.Controllers
         [HttpGet("")]
         [ProducesResponseType(typeof(IEnumerable<HttpJob>), (int)HttpStatusCode.OK)]
         [SwaggerRequestExample(typeof(GetAllParameters), typeof(GetAllParametersExample))]
+        [SwaggerResponseExample((int)HttpStatusCode.OK, typeof(HttpJobsExample))]
         public Task<IEnumerable<HttpJob>> GetAll([FromQuery]GetAllParameters parameters)
         {
-            return sortedSetScheduleClient.ListAsync(parameters.Start, parameters.Count);
+            return SortedSetScheduleClient.ListAsync(parameters.Start, parameters.Count);
         }
 
         /// <summary>
@@ -99,7 +100,7 @@ namespace KL.HttpScheduler.Api.Controllers
         [ProducesResponseType(typeof(long), (int)HttpStatusCode.OK)]
         public Task<long> Count()
         {
-            return sortedSetScheduleClient.CountAsync();
+            return SortedSetScheduleClient.CountAsync();
         }
 
         /// <summary>
@@ -107,13 +108,14 @@ namespace KL.HttpScheduler.Api.Controllers
         /// </summary>
         /// <param name="batchInput">batch of http jobs</param>
         /// <returns></returns>
+        /// <response code="200">OK</response>
+        /// <response code="400">Bad Request</response>
+        /// <response code="409">Conflict</response>
         [HttpPost("[action]")]
-        [ProducesResponseType(typeof(ConflictException), (int)HttpStatusCode.Conflict)]
-        [ProducesResponseType(typeof(Exception), (int)HttpStatusCode.BadRequest)]
-        [ProducesResponseType(typeof(void), (int)HttpStatusCode.OK)]
+        [SwaggerRequestExample(typeof(BatchInput), typeof(BatchInputExample))]
         public async Task<IActionResult> Batch([FromBody]BatchInput batchInput)
         {
-            var (success, ex) = await sortedSetScheduleClient.ScheduleAsync(batchInput.Jobs);
+            var (success, ex) = await SortedSetScheduleClient.ScheduleAsync(batchInput.Jobs);
 
             if (success)
             {

@@ -28,6 +28,9 @@ namespace KL.HttpScheduler
     public class MyActionBlock
     {
         private ITaskQueue<ActionBlockInput> Queue { get; }
+        public JobProcessorWrapper JobProcessorWrapper { get; }
+
+        public DateTimeOffset LatestDequeued { get; private set; }
 
         /// <summary>
         /// Action Block
@@ -36,14 +39,26 @@ namespace KL.HttpScheduler
         /// <param name="options"></param>
         public MyActionBlock(JobProcessorWrapper jobProcessorWrapper, MyActionBlockOptions options)
         {
-            Queue = new TaskQueueFactory().Create<ActionBlockInput>((input, _) =>
-            {
-                return jobProcessorWrapper.ProcessAsync(input.HttpJob);
-            }, options.MaxQueueLengthPerProcessor, options.MaxConcurrentTasksPerProcessor);
+            Queue = new TaskQueueFactory().Create<ActionBlockInput>(ProcessAsync, options.MaxQueueLengthPerProcessor, options.MaxConcurrentTasksPerProcessor);
+            JobProcessorWrapper = jobProcessorWrapper;
         }
         /// <inheritDoc />
         public MyActionBlock(JobProcessorWrapper jobProcessorWrapper, IOptions<MyActionBlockOptions> options): this(jobProcessorWrapper, options.Value) { }
 
+
+        private Task ProcessAsync(ActionBlockInput actionBlockInput, CancellationToken _)
+        {
+            switch (actionBlockInput.Input)
+            {
+                case HttpJob httpJob:
+                    return JobProcessorWrapper.ProcessAsync(httpJob);
+                case DateTimeOffset guid:
+                    LatestDequeued = guid;
+                    return Task.CompletedTask;
+                default:
+                    return Task.CompletedTask;
+            }
+        }
 
         /// <summary>
         /// Enqueue the action
@@ -54,7 +69,20 @@ namespace KL.HttpScheduler
         {
             return Queue.Add(new ActionBlockInput()
             {
-                HttpJob = httpJob
+                Input = httpJob
+            });
+        }
+
+        /// <summary>
+        /// Post guid
+        /// </summary>
+        /// <param name="dateTime"></param>
+        /// <returns></returns>
+        public bool Post(DateTimeOffset dateTime)
+        {
+            return Queue.Add(new ActionBlockInput()
+            {
+                Input = dateTime
             });
         }
 
@@ -73,7 +101,7 @@ namespace KL.HttpScheduler
         /// </summary>
         private class ActionBlockInput
         {
-            public HttpJob HttpJob { get; set; }
+            public object Input { get; set; }
         }
     }
 }
