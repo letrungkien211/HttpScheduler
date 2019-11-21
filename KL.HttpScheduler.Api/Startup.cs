@@ -103,7 +103,6 @@ namespace KL.HttpScheduler.Api
                 app.UseDeveloperExceptionPage();
             }
 
-            app.UseLogsApiAvailabilityMiddleware();
             app.UseMySwagger();
 
             app.UseRouting();

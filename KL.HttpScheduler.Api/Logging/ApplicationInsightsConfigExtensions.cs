@@ -22,18 +22,7 @@ namespace KL.HttpScheduler.Api.Logging
                     module.AuthenticationApiKey = appInsightsConfig.ApiKey;
             });
 
-            services.AddSingleton<ApplicationInsightsConfig>(appInsightsConfig);
-
             services.AddApplicationInsightsTelemetryProcessor<ApplicationInsightsFilter>();
-
-            services.AddHttpClient(MyExtensions.AppInsightsClientName, client =>
-            {
-                if (appInsightsConfig.IsValid())
-                {
-                    client.BaseAddress = appInsightsConfig.ApiUrl();
-                    client.DefaultRequestHeaders.Add("x-api-key", appInsightsConfig.ApiKey);
-                }
-            });
 
             return services;
         }

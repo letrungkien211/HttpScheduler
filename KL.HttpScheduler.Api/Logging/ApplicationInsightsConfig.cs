@@ -30,10 +30,5 @@ namespace KL.HttpScheduler.Api.Logging
         /// Api key
         /// </summary>
         public string ApiKey { get; set; }
-
-        /// <summary>
-        /// Api Url
-        /// </summary>
-        public Uri ApiUrl() => new Uri($"https://api.applicationinsights.io/v1/apps/{ApplicationId}/");
     }
 }
