@@ -1,10 +1,9 @@
 ﻿using System.Net;
 using System.Threading.Tasks;
-using KL.HttpScheduler.Api.Common;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 
-namespace KL.HttpScheduler.Api.Controllers
+namespace KL.HttpScheduler.Api.Logging
 {
     /// <summary>
     /// Check if logs api is available or not

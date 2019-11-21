@@ -2,7 +2,7 @@
 using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.ApplicationInsights.Extensibility;
 
-namespace KL.HttpScheduler.Api.Common
+namespace KL.HttpScheduler.Api.Logging
 {
     /// <summary>
     /// Filter

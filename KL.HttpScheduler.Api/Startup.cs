@@ -1,24 +1,18 @@
 ﻿using KL.HttpScheduler.Api.Common;
-using KL.HttpScheduler.Api.Controllers;
-using Microsoft.ApplicationInsights;
-using Microsoft.ApplicationInsights.AspNetCore.Extensions;
+using KL.HttpScheduler.Api.Health;
+using KL.HttpScheduler.Api.Logging;
+using KL.HttpScheduler.Api.Swagger;
 using Microsoft.ApplicationInsights.Extensibility;
-using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.QuickPulse;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
-using Swashbuckle.AspNetCore.Examples;
-using Swashbuckle.AspNetCore.Swagger;
 using System;
-using System.IO;
 using System.Net.Http;
-using System.Reflection;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace KL.HttpScheduler.Api
 {
@@ -36,7 +30,7 @@ namespace KL.HttpScheduler.Api
     /// </summary>
     public class Startup
     {
-        private Config Config { get; set; }
+        //private Config Config { get; set; }
 
         /// <summary>
         /// Instructor
@@ -56,95 +50,25 @@ namespace KL.HttpScheduler.Api
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            Config = Configuration.GetSection("Config").Get<Config>() ?? new Config();
             var actionBlockOptions = Configuration.GetSection("ActionBlock").Get<MyActionBlockOptions>();
             // https://stackoverflow.com/questions/46834697/threadpool-setminthreads-the-impact-of-setting-it
             ThreadPool.GetMinThreads(out var minw, out var minp);
             ThreadPool.SetMinThreads(minw, actionBlockOptions.MaxConcurrentTasksPerProcessor * Environment.ProcessorCount);
 
+            // Set up configuration
+            var config = Configuration.GetSection("Config").Get<Config>() ?? new Config();
             var appInsightsConfig = Configuration.GetSection("ApplicationInsights").Get<ApplicationInsightsConfig>() ?? new ApplicationInsightsConfig();
-
             services.Configure<MyActionBlockOptions>(Configuration.GetSection("ActionBlock"));
+            services.AddSingleton(config);
 
-            services.AddHttpClient();
-            services.AddHttpClient(MyExtensions.AppInsightsClientName, client =>
-            {
-                if (appInsightsConfig.IsValid())
-                {
-                    client.BaseAddress = appInsightsConfig.ApiUrl();
-                    client.DefaultRequestHeaders.Add("x-api-key", appInsightsConfig.ApiKey);
-                }
-            });
-
-            services.AddSingleton<ApplicationInsightsConfig>(appInsightsConfig);
-
-            services.AddSingleton<IDatabase>(_ =>
-            {
-                return (ConnectionMultiplexer.Connect(Config.RedisConnectionString)).GetDatabase();
-            });
-
-            services.AddSingleton<SortedSetScheduleClient>(provider =>
-            {
-                return new SortedSetScheduleClient(
-                        provider.GetService<MyActionBlock>(),
-                        provider.GetService<IDatabase>(),
-                        Config.SortedSetKey, Config.HashKey,
-                        provider.GetService<TelemetryClient>()
-                        );
-            });
-
-            services.AddRouting(options => options.LowercaseUrls = true);
-
-            services.AddSingleton<IJobProcessor, HttpJobProcessor>();
-            services.AddSingleton<JobProcessorWrapper>();
-            services.AddSingleton<TelemetryClient>();
-            services.AddSingleton<MyActionBlock>();
-
-            services.ConfigureTelemetryModule<QuickPulseTelemetryModule>((module, o) =>
-            {
-                if (!string.IsNullOrEmpty(appInsightsConfig.ApiKey))
-                    module.AuthenticationApiKey = appInsightsConfig.ApiKey;
-            });
-            services.AddApplicationInsightsTelemetry(new ApplicationInsightsServiceOptions()
-            {
-                EnableAdaptiveSampling = false,
-                InstrumentationKey = Configuration["ApplicationInsights:InstrumentationKey"]
-            });
-
-            if (!Config.IsNotRunner)
-            {
-                services.AddSingleton<SchedulerRunner>();
-            }
-
-            // Register the Swagger generator, defining 1 or more Swagger documents
-            services.AddSwaggerGen(c =>
-            {
-                c.SwaggerDoc("v1", new Info { Title = "Http Jobs Scheduler", Version = "v1" });
-                c.DocumentFilter<BasePathDocumentFilter>(Config.SwaggerBasePath);
-                c.OperationFilter<ExamplesOperationFilter>();
-
-                var xmlFiles = new[] {
-                    $"{Assembly.GetExecutingAssembly().GetName().Name}.xml",
-                    $"{typeof(HttpJob).Assembly.GetName().Name}.xml"
-                };
-                foreach (var xmlFile in xmlFiles)
-                {
-                    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-                    if (File.Exists(xmlPath))
-                        c.IncludeXmlComments(xmlPath);
-                }
-            });
-
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
-                    .AddJsonOptions(options =>
-                    {
-                        options.SerializerSettings.NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore;
-                    });
-
-            if (Config.UnitTest)
-            {
-                services.AddSingleton<IJobProcessor, MockJobProcessor>();
-            }
+            // Configure servies
+            services.AddRedis(config)
+                    .AddApplicationInsights(appInsightsConfig)
+                    .AddHttpJobProcessor(config)
+                    .AddMyMvc()
+                    .AddMySwagger()
+                    .AddMyHealthChecks(config)
+                    .AddForUnitTests(config.UnitTest);
         }
 
         /// <summary>
@@ -156,36 +80,21 @@ namespace KL.HttpScheduler.Api
         /// <param name="logger"></param>
         public void Configure(
             IApplicationBuilder app,
-            IHostingEnvironment env,
-            IApplicationLifetime applicationLifetime,
-            ILogger<Startup> logger
-            )
+            IHostEnvironment env,
+            IHostApplicationLifetime applicationLifetime,
+            ILogger<Startup> logger)
         {
-            var telemetryConfig = app.ApplicationServices.GetService<TelemetryConfiguration>();
-            telemetryConfig.TelemetryProcessorChainBuilder.Use(next => new ApplicationInsightsFilter(next));
-            telemetryConfig.TelemetryProcessorChainBuilder.Build();
-
             if (!app.ApplicationServices.GetService<IDatabase>().IsConnected(""))
             {
-                throw new TypeLoadException($"Redis server is not ready. Host={Config.RedisConnectionString}");
+                throw new TypeLoadException($"Redis server is not ready.");
             }
             logger.LogInformation("Configure starts");
 
             app.ApplicationServices.GetService<SortedSetScheduleClient>();
-
-            Task.Run(() => app.ApplicationServices.GetService<MyActionBlock>().RunAsync(applicationLifetime.ApplicationStopped)).GetAwaiter();
-
-            if (!Config.IsNotRunner)
-            {
-                Task.Run(() => app.ApplicationServices.GetService<SchedulerRunner>()
-                                  .RunAsync(applicationLifetime.ApplicationStopped)
-                                  .ConfigureAwait(false)).GetAwaiter();
-
-            }
-
+            app.ApplicationServices.GetService<MyActionBlock>();
             applicationLifetime.ApplicationStopped.Register(() =>
             {
-                telemetryConfig.TelemetryChannel.Flush();
+                app.ApplicationServices.GetRequiredService<TelemetryConfiguration>().TelemetryChannel.Flush();
                 Thread.Sleep(2000);
             });
 
@@ -194,22 +103,17 @@ namespace KL.HttpScheduler.Api
                 app.UseDeveloperExceptionPage();
             }
 
-            // Enable middleware to serve generated Swagger as a JSON endpoint.
-            app.UseSwagger();
+            app.UseLogsApiAvailabilityMiddleware();
+            app.UseMySwagger();
 
-            // Enable middleware to serve swagger-ui (HTML, JS, CSS, etc.), 
-            // specifying the Swagger JSON endpoint.
-            app.UseSwaggerUI(c =>
+            app.UseRouting();
+            app.UseEndpoints(endpoints =>
             {
-                c.SwaggerEndpoint("v1/swagger.json", "Http Jobs Scheduler");
+                endpoints.MapControllers();
+                endpoints.MapCustomHealthChecks();
             });
 
-            app.UseLogsApiAvailabilityMiddleware();
-
-            app.UseMvc();
-
             logger.LogInformation("Configure ends");
-            telemetryConfig.TelemetryChannel.Flush();
         }
     }
 }

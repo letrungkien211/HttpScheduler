@@ -10,7 +10,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
-using Xunit.Sdk;
 
 namespace KL.HttpScheduler.Api.Tests
 {
@@ -33,9 +32,8 @@ namespace KL.HttpScheduler.Api.Tests
             var client = Factory.CreateClient();
 
             using (var cancelSource = new CancellationTokenSource())
-            using (var scope = Factory.Server.Host.Services.CreateScope())
             {
-                var runner = scope.ServiceProvider.GetRequiredService<SchedulerRunner>();
+                var runner = Factory.Services.GetRequiredService<SchedulerRunner>();
                 var task = Task.Run(() => runner.RunAsync(cancelSource.Token));
                 var req = new HttpRequestMessage(HttpMethod.Post, "api/jobs");
                 var job = new HttpJob()
@@ -55,7 +53,7 @@ namespace KL.HttpScheduler.Api.Tests
 
                 await Task.Delay(3000);
 
-                var processor = scope.ServiceProvider.GetRequiredService<IJobProcessor>() as MockJobProcessor;
+                var processor = Factory.Services.GetRequiredService<IJobProcessor>() as MockJobProcessor;
 
                 Assert.NotNull(processor);
                 var processedJob = processor.Get(job.Id);
@@ -67,6 +65,7 @@ namespace KL.HttpScheduler.Api.Tests
 
                 cancelSource.Cancel();
                 await task;
+
             }
         }
 
