@@ -51,31 +51,31 @@ namespace KL.HttpScheduler
         public Uri Uri { get; set; }
 
         /// <summary>
-        /// Http method
+        /// Http method. Default Value = "GET"
         /// </summary>
         [JsonProperty("httpMethod")]
         public string HttpMethod { get; set; } = "GET";
 
         /// <summary>
-        /// Content type
+        /// Content type. Default Value = "application/json"
         /// </summary>
         [JsonProperty("contentType")]
         public string ContentType { get; set; } = "application/json";
 
         /// <summary>
-        /// Headers
+        /// Headers. Default Value = null
         /// </summary>
         [JsonProperty("headers")]
         public Dictionary<string, string> Headers { get; set; }
 
         /// <summary>
-        /// Body
+        /// Body. Default Value = null
         /// </summary>
         [JsonProperty("body")]
         public string Body { get; set; }
 
         /// <summary>
-        /// Batch Id
+        /// Batch Id. For internal use. Do not set this value.
         /// </summary>
         [JsonProperty("batchId")]
         internal string BatchId { get; set; }

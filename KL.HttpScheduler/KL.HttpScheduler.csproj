@@ -1,15 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="KL.TaskQueue" Version="1.0.0" />
-    <PackageReference Include="Microsoft.ApplicationInsights" Version="2.9.1" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
+    <PackageReference Include="Microsoft.ApplicationInsights" Version="2.11.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="StackExchange.Redis" Version="2.0.601" />
-    <PackageReference Include="Microsoft.Extensions.Http" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="3.0.1" />
   </ItemGroup>
 </Project>

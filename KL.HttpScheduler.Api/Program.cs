@@ -1,11 +1,7 @@
-﻿using Microsoft.AspNetCore;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.ApplicationInsights;
-using System;
+﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Hosting;
 using System.Net;
 using System.Runtime.CompilerServices;
-using System.Threading;
 
 [assembly: InternalsVisibleTo("KL.HttpScheduler.Tests")]
 
@@ -15,25 +11,15 @@ namespace KL.HttpScheduler.Api
     {
         public static void Main(string[] args)
         {
-            ThreadPool.GetMaxThreads(out var maxw, out var maxp);
-            ThreadPool.GetMinThreads(out var minw, out var minp);
-
             ServicePointManager.DefaultConnectionLimit = int.MaxValue;
-            CreateWebHostBuilder(args).Build().Run();
+            CreateHostBuilder(args).Build().Run();
         }
 
-        public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
-            WebHost.CreateDefaultBuilder(args)
-                .UseApplicationInsights()
-                .ConfigureLogging((hostingContext, builder) =>
+        public static IHostBuilder CreateHostBuilder(string[] args) =>
+            Host.CreateDefaultBuilder(args)
+                .ConfigureWebHostDefaults(webBuilder =>
                 {
-                    builder.AddConsole();
-                    builder.AddDebug();
-                    builder.AddFilter<ApplicationInsightsLoggerProvider>((name, level) =>
-                    {
-                        return level >= LogLevel.Information && name.Contains(typeof(HttpJob).Namespace);
-                    });
-                })
-                .UseStartup<Startup>();
+                    webBuilder.UseStartup<Startup>();
+                });
     }
 }
